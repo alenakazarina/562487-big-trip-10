@@ -1,7 +1,7 @@
 # Личный проект «Большое путешествие» [![Build status][travis-image]][travis-url]
 
 * Студент: [Alena Kazarina](https://up.htmlacademy.ru/ecmascript/10/user/562487).
-* Наставник: `Неизвестно`.
+* Наставник: [Дмитрий Авдеев](https://up.htmlacademy.ru/ecmascript/10/user/1261683).
 
 ---
 
