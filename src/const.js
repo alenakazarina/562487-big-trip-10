@@ -1,44 +1,28 @@
-const EVENT_TYPES = [
-  {
-    name: `Taxi`,
-    type: `transfer`
-  },
-  {
-    name: `Bus`,
-    type: `transfer`
-  },
-  {
-    name: `Train`,
-    type: `transfer`
-  },
-  {
-    name: `Ship`,
-    type: `transfer`
-  },
-  {
-    name: `Transport`,
-    type: `transfer`
-  },
-  {
-    name: `Drive`,
-    type: `transfer`
-  },
-  {
-    name: `Flight`,
-    type: `transfer`
-  },
-  {
-    name: `Check-in`,
-    type: `activity`
-  },
-  {
-    name: `Sightseeing`,
-    type: `activity`
-  },
-  {
-    name: `Restaurant`,
-    type: `activity`
-  }
+const PHOTO_PATH = `http://picsum.photos/300/150?r=`;
+
+const DEFAULT_DESCRIPTION = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras aliquet varius magna, non porta ligula feugiat eget. Fusce tristique felis at fermentum pharetra. Aliquam id orci ut lectus varius viverra. Nullam nunc ex, convallis sed finibus eget, sollicitudin eget ante. Phasellus eros mauris, condimentum sed nibh vitae, sodales efficitur ipsum. Sed blandit, eros vel aliquam faucibus, purus ex euismod diam, eu luctus nunc ante ut dui. Sed sed nisi sed augue convallis suscipit in sed felis. Aliquam erat volutpat. Nunc fermentum tortor ac porta dapibus. In rutrum ac purus sit amet tempus.`;
+
+const DEFAULT_CITIES = [
+  `Saint Petersburg`,
+  `Amsterdam`,
+  `Geneva`,
+  `Chamonix`
+];
+
+const TRANSFER_EVENTS = [
+  `Taxi`,
+  `Bus`,
+  `Train`,
+  `Ship`,
+  `Transport`,
+  `Drive`,
+  `Flight`
+];
+
+const ACTIVITY_EVENTS = [
+  `Check-in`,
+  `Sightseeing`,
+  `Restaurant`
 ];
 
 const ICON_PATHS = [
@@ -54,36 +38,20 @@ const ICON_PATHS = [
   `transport.png`
 ];
 
-const DEFAULT_OFFERS = [
-  {
-    type: `luggage`,
-    title: `Add luggage +10 €`,
-  },
-  {
-    type: `comfort`,
-    title: `Switch to comfort class +150 €`,
-  },
-  {
-    type: `meal`,
-    title: `Add meal +2 €`,
-  },
-  {
-    type: `seats`,
-    title: `Choose seats +9 €`
-  }
+const OFFERS = [
+  `Add luggage +10 €`,
+  `Switch to comfort class +150 €`,
+  `Add meal +2 €`,
+  `Choose seats +9 €`
 ];
 
-const AVAILABLE_OFFERS = DEFAULT_OFFERS.map((offer) => {
-  const title = offer.title;
-  const price = title.split(`+`)[1];
-  offer.price = parseInt(price.substring(0, price.length - 2), 10);
-  offer.title = title.split(`+`)[0];
-  return offer;
-});
-
 export {
-  EVENT_TYPES,
+  PHOTO_PATH,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_CITIES,
+  ACTIVITY_EVENTS,
+  TRANSFER_EVENTS,
   ICON_PATHS,
-  AVAILABLE_OFFERS
+  OFFERS
 };
 

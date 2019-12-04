@@ -4,8 +4,8 @@ const FILTER_NAMES = [
   `Past`
 ];
 
-const generateFilters = () => FILTER_NAMES.map((it) => ({
-  name: it.toLowerCase(),
+const generateFilters = () => FILTER_NAMES.map((name) => ({
+  name: name.toLowerCase(),
   count: Math.floor(Math.random() * 10)
 }));
 

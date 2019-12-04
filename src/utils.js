@@ -1,3 +1,25 @@
+import {OFFERS} from './const';
+
+const getOfferType = (offer) => {
+  const offerTypes = [
+    `meal`,
+    `luggage`,
+    `comfort`,
+    `seats`
+  ];
+  return offerTypes.filter((offerType) => offer.toLowerCase().includes(offerType)).join();
+};
+
+const generateAvailableOffers = () => {
+  let offers = [];
+  offers = offers.concat(OFFERS.map((offer) => ({
+    type: getOfferType(offer),
+    title: offer.split(`+`)[0],
+    price: +offer.split(`+`)[1].split(` `)[0]
+  })));
+  return offers;
+};
+
 const castTimeFormat = (value) => {
   return value < 10 ? `0${value}` : String(value);
 };
@@ -27,12 +49,8 @@ const formatFullDatetime = (date) => {
   return formatDatetime(date).concat(`T${hours}:${minutes}`);
 };
 
-const calculateSum = (items) => items.reduce((acc, it) => {
-  return it + acc;
-}, 0);
-
 const render = (container, template, place = `beforeend`) => {
   container.insertAdjacentHTML(place, template);
 };
 
-export {formatTimeWithSlashes, formatDatetime, formatFullDatetime, calculateSum, render};
+export {formatTimeWithSlashes, formatDatetime, formatFullDatetime, generateAvailableOffers, render};

@@ -9,10 +9,10 @@ export const createTripInfoMainTemplate = (startDate, endDate, cities) => {
     titles.join(`&mdash`) :
     `${titles[0]} &mdash; ... &mdash; ${titles[titles.length - 1]}`;
 
-  return (`
+  return `
     <div class="trip-info__main">
       <h1 class="trip-info__title">${titlesTemplate}</h1>
       <p class="trip-info__dates">${startTime}&nbsp;&mdash;&nbsp;${endTime}</p>
     </div>
-  `);
+  `;
 };
