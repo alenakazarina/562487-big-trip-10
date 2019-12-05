@@ -1,3 +1,5 @@
+import {createElement} from '../utils';
+
 const createFilter = (filter) => {
   const isChecked = filter.name === `everything` ? `checked` : ``;
 
@@ -20,4 +22,26 @@ const createFiltersTemplate = (filters) => {
   `;
 };
 
-export {createFiltersTemplate};
+class Filters {
+  constructor(filters) {
+    this._filters = filters;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createFiltersTemplate(this._filters);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
+
+export default Filters;
