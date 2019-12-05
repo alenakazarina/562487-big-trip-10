@@ -1,12 +1,13 @@
-import {createTripInfoMainTemplate} from './components/trip-info-main';
-import {createTripInfoCostTemplate} from './components/trip-info-cost';
-import {createMenuTemplate} from './components/menu';
-import {createFiltersTemplate} from './components/filters';
-import {createTripDaysListTemplate} from './components/trip-days-list';
-import {createTripDayTemplate} from './components/trip-day';
-import {createSortingTemplate} from './components/sorting';
-import {createEditEventTemplate} from './components/edit-event-form';
-import {render} from './utils';
+import TripInfoMainComponent from './components/trip-info-main';
+import TripInfoCostComponent from './components/trip-info-cost';
+import MenuComponent from './components/menu';
+import FiltersComponent from './components/filters';
+import TripDaysListComponent from './components/trip-days-list';
+import TripDayComponent from './components/trip-day';
+import SortingComponent from './components/sorting';
+import EventComponent from './components/event';
+import EditEventFormComponent from './components/edit-event-form';
+import {RenderPositions, render} from './utils';
 import {generateEvents} from './mocks/events';
 import {generateDatesArray} from './mocks/dates';
 import {generateFilters} from './mocks/filters';
@@ -27,25 +28,58 @@ const startTripDate = sortedEvents[0].startDate;
 const endTripDate = sortedEvents[sortedEvents.length - 1].endDate;
 
 const tripInfoElement = document.querySelector(`.trip-info`);
-render(tripInfoElement, createTripInfoMainTemplate(startTripDate, endTripDate, cities));
-render(tripInfoElement, createTripInfoCostTemplate(events));
+render(tripInfoElement, new TripInfoMainComponent(startTripDate, endTripDate, cities).getElement());
+render(tripInfoElement, new TripInfoCostComponent(events).getElement());
 
 const tripControlsElement = document.querySelector(`.trip-controls`);
 const tripEventsElement = document.querySelector(`.trip-events`);
 
-render(tripControlsElement.firstElementChild, createMenuTemplate(), `afterend`);
-render(tripControlsElement, createFiltersTemplate(filters));
-render(tripEventsElement.firstElementChild, createSortingTemplate(), `afterend`);
+render(tripControlsElement.firstElementChild, new MenuComponent().getElement(), RenderPositions.AFTERBEGIN);
+render(tripControlsElement, new FiltersComponent(filters).getElement());
+render(tripEventsElement.firstElementChild, new SortingComponent().getElement(), RenderPositions.AFTERBEGIN);
 
-render(tripEventsElement, createTripDaysListTemplate());
+render(tripEventsElement, new TripDaysListComponent().getElement());
 const tripDaysElement = document.querySelector(`.trip-days`);
 
-for (let i = 0; i < eventsDates.length; i++) {
-  const date = eventsDates[i];
-  const dayEvents = sortedEvents.filter((event) => event.startDate === date);
-  const tripDayTemplate = createTripDayTemplate(date, dayEvents, i);
-  render(tripDaysElement, tripDayTemplate);
-}
+const renderEvent = (event, container) => {
+  const eventElement = new EventComponent(event).getElement();
+  const editEventElement = new EditEventFormComponent(event).getElement();
 
-const eventsListElement = document.querySelector(`.trip-events__list`);
-render(eventsListElement, createEditEventTemplate(sortedEvents[0]), `afterbegin`);
+  const editEventFormElement = editEventElement.querySelector(`form`);
+  const eventRollupButton = eventElement.querySelector(`.event__rollup-btn`);
+  const formRollupButton = editEventFormElement.querySelector(`.event__rollup-btn`);
+
+
+  const replaceFormToEvent = (eventTemplate, form) => {
+    container.replaceChild(eventTemplate, form);
+  };
+
+  const replaceEventToForm = (eventTemplate, form) => {
+    container.replaceChild(form, eventTemplate);
+  };
+
+  eventRollupButton.addEventListener(`click`, () => {
+    replaceEventToForm(eventElement, editEventElement);
+  });
+
+  formRollupButton.addEventListener(`click`, () => {
+    replaceFormToEvent(eventElement, editEventElement);
+  });
+
+  editEventFormElement.addEventListener(`submit`, () => {
+    replaceFormToEvent(editEventElement, eventElement);
+  });
+  render(container, eventElement);
+};
+
+eventsDates.forEach((day, i) => {
+  const dayEvents = sortedEvents.filter((event) => event.startDate === day);
+  //  render eventslistElement
+  render(tripDaysElement, new TripDayComponent(day, dayEvents, i).getElement());
+
+  //  render events
+  dayEvents.forEach((event) => {
+    const eventListElement = tripDaysElement.querySelectorAll(`.trip-events__list`)[i];
+    renderEvent(event, eventListElement);
+  });
+});

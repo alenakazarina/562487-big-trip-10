@@ -1,4 +1,4 @@
-import {formatTimeWithSlashes, generateAvailableOffers} from '../utils';
+import {formatTimeWithSlashes, generateAvailableOffers, createElement} from '../utils';
 import {ACTIVITY_EVENTS, TRANSFER_EVENTS} from '../const';
 
 const createOfferSelector = (offer, isChecked, id) => {
@@ -187,4 +187,26 @@ const createEditEventTemplate = (event) => {
   `;
 };
 
-export {createEditEventTemplate};
+class EditEventForm {
+  constructor(event) {
+    this._event = event;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createEditEventTemplate(this._event);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate(this._element));
+    }
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
+
+export default EditEventForm;

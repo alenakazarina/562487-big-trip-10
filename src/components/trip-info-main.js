@@ -1,4 +1,6 @@
-export const createTripInfoMainTemplate = (startDate, endDate, cities) => {
+import {createElement} from '../utils';
+
+const createTripInfoMainTemplate = (startDate, endDate, cities) => {
 
   const isSameMonth = startDate.getMonth() === endDate.getMonth();
   const startTime = `${startDate.toString().substring(3, 7)} ${startDate.getDate()}`;
@@ -16,3 +18,29 @@ export const createTripInfoMainTemplate = (startDate, endDate, cities) => {
     </div>
   `;
 };
+
+class TripInfoMain {
+  constructor(startDate, endDate, cities) {
+    this._startDate = startDate;
+    this._endDate = endDate;
+    this._cities = cities;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createTripInfoMainTemplate(this._startDate, this._endDate, this._cities);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
+
+export default TripInfoMain;

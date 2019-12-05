@@ -1,5 +1,10 @@
 import {OFFERS} from './const';
 
+const RenderPositions = {
+  AFTERBEGIN: `afterbegin`,
+  BEFOREEND: `beforeend`
+};
+
 const getOfferType = (offer) => {
   const offerTypes = [
     `meal`,
@@ -49,8 +54,29 @@ const formatFullDatetime = (date) => {
   return formatDatetime(date).concat(`T${hours}:${minutes}`);
 };
 
-const render = (container, template, place = `beforeend`) => {
-  container.insertAdjacentHTML(place, template);
+const createElement = (template) => {
+  const newElement = document.createElement(`div`);
+  newElement.innerHTML = template;
+  return newElement.firstElementChild;
 };
 
-export {formatTimeWithSlashes, formatDatetime, formatFullDatetime, generateAvailableOffers, render};
+const render = (container, element, place = RenderPositions.BEFOREEND) => {
+  switch (place) {
+    case RenderPositions.AFTERBEGIN:
+      container.prepend(element);
+      break;
+    case RenderPositions.BEFOREEND:
+      container.append(element);
+      break;
+  }
+};
+
+export {
+  RenderPositions,
+  formatTimeWithSlashes,
+  formatDatetime,
+  formatFullDatetime,
+  generateAvailableOffers,
+  createElement,
+  render
+};
