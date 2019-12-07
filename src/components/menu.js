@@ -13,9 +13,8 @@ const createTab = (title, isActive) => {
   `;
 };
 
-const createMenuTemplate = () => {
-  const isActive = Math.random() > 0.5;
-  const tabsTemplate = MENU_TABS.map((it) => createTab(it, isActive)).join(`\n`);
+const createMenuTemplate = (tabs) => {
+  const tabsTemplate = tabs.map((it, i) => createTab(it, i === 0)).join(`\n`);
 
   return `
     <nav class="trip-controls__trip-tabs  trip-tabs">
@@ -26,11 +25,12 @@ const createMenuTemplate = () => {
 
 class Menu {
   constructor() {
+    this._tabs = MENU_TABS;
     this._element = null;
   }
 
   getTemplate() {
-    return createMenuTemplate();
+    return createMenuTemplate(this._tabs);
   }
 
   getElement() {

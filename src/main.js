@@ -7,7 +7,8 @@ import TripDayComponent from './components/trip-day';
 import SortingComponent from './components/sorting';
 import EventComponent from './components/event';
 import EditEventFormComponent from './components/edit-event-form';
-import {RenderPositions, render} from './utils';
+import NoPointsComponent from './components/no-points';
+import {render} from './utils';
 import {generateEvents} from './mocks/events';
 import {generateDatesArray} from './mocks/dates';
 import {generateFilters} from './mocks/filters';
@@ -21,65 +22,78 @@ const randomDates = generateDatesArray(DAYS_COUNT);
 const events = generateEvents(EVENTS_COUNT, randomDates);
 const filters = generateFilters();
 
-const sortedEvents = sortByStartDate(events);
-const eventsDates = Array.from(new Set(sortedEvents.map((event) => event.startDate)));
-const cities = new Set(sortedEvents.map((it) => it.destination));
-const startTripDate = sortedEvents[0].startDate;
-const endTripDate = sortedEvents[sortedEvents.length - 1].endDate;
-
 const tripInfoElement = document.querySelector(`.trip-info`);
-render(tripInfoElement, new TripInfoMainComponent(startTripDate, endTripDate, cities).getElement());
-render(tripInfoElement, new TripInfoCostComponent(events).getElement());
-
 const tripControlsElement = document.querySelector(`.trip-controls`);
 const tripEventsElement = document.querySelector(`.trip-events`);
 
-render(tripControlsElement.firstElementChild, new MenuComponent().getElement(), RenderPositions.AFTERBEGIN);
+render(tripControlsElement, new MenuComponent().getElement());
 render(tripControlsElement, new FiltersComponent(filters).getElement());
-render(tripEventsElement.firstElementChild, new SortingComponent().getElement(), RenderPositions.AFTERBEGIN);
 
-render(tripEventsElement, new TripDaysListComponent().getElement());
-const tripDaysElement = document.querySelector(`.trip-days`);
+if (!events.length) {
+  render(tripInfoElement, new TripInfoMainComponent(events).getElement());
+  render(tripInfoElement, new TripInfoCostComponent(events).getElement());
 
-const renderEvent = (event, container) => {
-  const eventElement = new EventComponent(event).getElement();
-  const editEventElement = new EditEventFormComponent(event).getElement();
+  render(tripEventsElement, new NoPointsComponent().getElement());
+} else {
+  const sortedEvents = sortByStartDate(events);
+  const eventsDates = Array.from(new Set(sortedEvents.map((event) => event.startDate)));
 
-  const editEventFormElement = editEventElement.querySelector(`form`);
-  const eventRollupButton = eventElement.querySelector(`.event__rollup-btn`);
-  const formRollupButton = editEventFormElement.querySelector(`.event__rollup-btn`);
+  render(tripInfoElement, new TripInfoMainComponent(sortedEvents).getElement());
+  render(tripInfoElement, new TripInfoCostComponent(sortedEvents).getElement());
 
+  render(tripEventsElement, new SortingComponent().getElement());
+  render(tripEventsElement, new TripDaysListComponent().getElement());
 
-  const replaceFormToEvent = (eventTemplate, form) => {
-    container.replaceChild(eventTemplate, form);
+  const tripDaysElement = document.querySelector(`.trip-days`);
+
+  const renderEvent = (event, container) => {
+    const eventElement = new EventComponent(event).getElement();
+    const editEventElement = new EditEventFormComponent(event).getElement();
+
+    const editEventFormElement = editEventElement.querySelector(`form`);
+    const eventRollupButton = eventElement.querySelector(`.event__rollup-btn`);
+    const formRollupButton = editEventFormElement.querySelector(`.event__rollup-btn`);
+
+    const replaceFormToEvent = (eventTemplate, form) => {
+      container.replaceChild(eventTemplate, form);
+      document.removeEventListener(`keydown`, onEscKeyPress);
+    };
+
+    const onEscKeyPress = (evt) => {
+      if (evt.key === `Escape` || evt.key === `Esc`) {
+        replaceFormToEvent(eventElement, editEventElement);
+      }
+    };
+
+    const replaceEventToForm = (eventTemplate, form) => {
+      container.replaceChild(form, eventTemplate);
+      document.addEventListener(`keydown`, onEscKeyPress);
+    };
+
+    eventRollupButton.addEventListener(`click`, () => {
+      replaceEventToForm(eventElement, editEventElement);
+    });
+
+    formRollupButton.addEventListener(`click`, () => {
+      replaceFormToEvent(eventElement, editEventElement);
+    });
+
+    editEventFormElement.addEventListener(`submit`, (evt) => {
+      evt.preventDefault();
+      replaceFormToEvent(editEventElement, eventElement);
+    });
+    render(container, eventElement);
   };
 
-  const replaceEventToForm = (eventTemplate, form) => {
-    container.replaceChild(form, eventTemplate);
-  };
+  eventsDates.forEach((day, i) => {
+    const dayEvents = sortedEvents.filter((event) => event.startDate === day);
+    //  render eventslistElement
+    render(tripDaysElement, new TripDayComponent(day, dayEvents, i).getElement());
 
-  eventRollupButton.addEventListener(`click`, () => {
-    replaceEventToForm(eventElement, editEventElement);
+    //  render events
+    dayEvents.forEach((event) => {
+      const eventListElement = tripDaysElement.querySelectorAll(`.trip-events__list`)[i];
+      renderEvent(event, eventListElement);
+    });
   });
-
-  formRollupButton.addEventListener(`click`, () => {
-    replaceFormToEvent(eventElement, editEventElement);
-  });
-
-  editEventFormElement.addEventListener(`submit`, () => {
-    replaceFormToEvent(editEventElement, eventElement);
-  });
-  render(container, eventElement);
-};
-
-eventsDates.forEach((day, i) => {
-  const dayEvents = sortedEvents.filter((event) => event.startDate === day);
-  //  render eventslistElement
-  render(tripDaysElement, new TripDayComponent(day, dayEvents, i).getElement());
-
-  //  render events
-  dayEvents.forEach((event) => {
-    const eventListElement = tripDaysElement.querySelectorAll(`.trip-events__list`)[i];
-    renderEvent(event, eventListElement);
-  });
-});
+}
