@@ -38,12 +38,25 @@ const ICON_PATHS = [
   `transport.png`
 ];
 
+const getOfferType = (offer) => {
+  return [
+    `meal`,
+    `luggage`,
+    `comfort`,
+    `seats`
+  ].filter((offerType) => offer.toLowerCase().includes(offerType)).join();
+};
+
 const OFFERS = [
   `Add luggage +10 €`,
   `Switch to comfort class +150 €`,
   `Add meal +2 €`,
   `Choose seats +9 €`
-];
+].map((offer) => ({
+  type: getOfferType(offer),
+  title: offer.split(`+`)[0],
+  price: +offer.split(`+`)[1].split(` `)[0]
+}));
 
 export {
   PHOTO_PATH,
