@@ -1,5 +1,5 @@
-const everyThingFilter = {
-  name: `EveryThing`,
+const everythingFilter = {
+  name: `Everything`,
   filterFn(days) {
     return days;
   }
@@ -20,7 +20,7 @@ const pastFilter = {
 };
 
 const FILTERS = [
-  everyThingFilter,
+  everythingFilter,
   futureFilter,
   pastFilter
 ];
