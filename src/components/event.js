@@ -1,6 +1,30 @@
-import {formatFullDatetime, createElement} from '../utils';
+import AbstractComponent from './abstract-component';
+import {castTimeFormat, formatFullDatetime} from '../utils/common';
 
-const MAX_OFFERS_COUNT_TO_SHOW = 2;
+const MAX_OFFERS_COUNT_TO_SHOW = 3;
+
+const getEventDuration = (startDate, endDate) => {
+  let durationDays = Math.floor((endDate - startDate) / (1000 * 3600 * 24));
+  let durationHours = Math.floor((endDate - startDate) / (1000 * 3600));
+  let durationMinutes = Math.floor((endDate - startDate) / (1000 * 60) % 60);
+
+  durationDays = durationDays ? `${durationDays}D` : ``;
+  durationHours = (durationDays || durationHours) ? `${castTimeFormat(durationHours)}H` : ``;
+  durationMinutes = (durationHours || durationMinutes) ? `${castTimeFormat(durationMinutes)}M` : ``;
+  return {
+    days: durationDays,
+    hours: durationHours,
+    minutes: durationMinutes
+  };
+};
+
+const getDatetime = (date) => {
+  const dateTime = formatFullDatetime(date);
+  return {
+    datetime: dateTime,
+    time: dateTime.substring(dateTime.length - 5, dateTime.length)
+  };
+};
 
 const createOfferTemplate = (offer) => {
   return `
@@ -14,14 +38,11 @@ const createOfferTemplate = (offer) => {
 
 const createEventTemplate = (event) => {
   const {name, icon, price, startDate, endDate} = event;
-  const startDatetime = formatFullDatetime(startDate);
-  const endDatetime = formatFullDatetime(endDate);
 
-  const startTime = startDatetime.substring(startDatetime.length - 5, startDatetime.length);
-  const endTime = endDatetime.substring(endDatetime.length - 5, endDatetime.length);
+  const start = getDatetime(startDate);
+  const end = getDatetime(endDate);
 
-  const durationHours = Math.floor((event.endDate - event.startDate) / (1000 * 3600));
-  const durationMinutes = Math.floor((event.endDate - event.startDate) / (1000 * 60) % 60);
+  const {days, hours, minutes} = getEventDuration(startDate, endDate);
 
   const offers = event.offers.slice(0, MAX_OFFERS_COUNT_TO_SHOW).map((it) => createOfferTemplate(it)).join(`\n`);
 
@@ -35,11 +56,11 @@ const createEventTemplate = (event) => {
 
         <div class="event__schedule">
           <p class="event__time">
-            <time class="event__start-time" datetime=${startDatetime}>${startTime}</time>
+            <time class="event__start-time" datetime=${start.datetime}>${start.time}</time>
             &mdash;
-            <time class="event__end-time" datetime=${endDatetime}>${endTime}</time>
+            <time class="event__end-time" datetime=${end.datetime}>${end.time}</time>
           </p>
-          <p class="event__duration">${durationHours}H ${durationMinutes}M</p>
+          <p class="event__duration">${days} ${hours} ${minutes}</p>
         </div>
 
         <p class="event__price">
@@ -59,25 +80,18 @@ const createEventTemplate = (event) => {
   `;
 };
 
-class Event {
+class Event extends AbstractComponent {
   constructor(event) {
+    super();
     this._event = event;
-    this._element = null;
   }
 
   getTemplate() {
     return createEventTemplate(this._event);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
+  setClickListener(handler) {
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, handler);
   }
 }
 

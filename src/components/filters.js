@@ -1,7 +1,7 @@
-import {createElement} from '../utils';
+import AbstractComponent from './abstract-component';
 
 const createFilter = (filter) => {
-  const isChecked = filter.name === `everything` ? `checked` : ``;
+  const isChecked = filter.name === `EveryThing` ? `checked` : ``;
 
   return `
     <div class="trip-filters__filter">
@@ -22,25 +22,14 @@ const createFiltersTemplate = (filters) => {
   `;
 };
 
-class Filters {
+class Filters extends AbstractComponent {
   constructor(filters) {
+    super();
     this._filters = filters;
-    this._element = null;
   }
 
   getTemplate() {
     return createFiltersTemplate(this._filters);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }
 

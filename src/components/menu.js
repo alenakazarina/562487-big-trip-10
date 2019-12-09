@@ -1,4 +1,4 @@
-import {createElement} from '../utils';
+import AbstractComponent from './abstract-component';
 
 const MENU_TABS = [
   `Table`,
@@ -13,9 +13,8 @@ const createTab = (title, isActive) => {
   `;
 };
 
-const createMenuTemplate = () => {
-  const isActive = Math.random() > 0.5;
-  const tabsTemplate = MENU_TABS.map((it) => createTab(it, isActive)).join(`\n`);
+const createMenuTemplate = (tabs) => {
+  const tabsTemplate = tabs.map((it, i) => createTab(it, i === 0)).join(`\n`);
 
   return `
     <nav class="trip-controls__trip-tabs  trip-tabs">
@@ -24,24 +23,14 @@ const createMenuTemplate = () => {
   `;
 };
 
-class Menu {
+class Menu extends AbstractComponent {
   constructor() {
-    this._element = null;
+    super();
+    this._tabs = MENU_TABS;
   }
 
   getTemplate() {
-    return createMenuTemplate();
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
+    return createMenuTemplate(this._tabs);
   }
 }
 

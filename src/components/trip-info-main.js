@@ -1,6 +1,18 @@
-import {createElement} from '../utils';
+import AbstractComponent from './abstract-component';
 
-const createTripInfoMainTemplate = (startDate, endDate, cities) => {
+const createTripInfoMainTemplate = (events) => {
+  if (!events.length) {
+    return `
+      <div class="trip-info__main">
+        <h1 class="trip-info__title"></h1>
+        <p class="trip-info__dates"></p>
+      </div>
+    `;
+  }
+
+  const cities = new Set(events.map((it) => it.destination));
+  const startDate = events[0].startDate;
+  const endDate = events[events.length - 1].endDate;
 
   const isSameMonth = startDate.getMonth() === endDate.getMonth();
   const startTime = `${startDate.toString().substring(3, 7)} ${startDate.getDate()}`;
@@ -19,27 +31,14 @@ const createTripInfoMainTemplate = (startDate, endDate, cities) => {
   `;
 };
 
-class TripInfoMain {
-  constructor(startDate, endDate, cities) {
-    this._startDate = startDate;
-    this._endDate = endDate;
-    this._cities = cities;
-    this._element = null;
+class TripInfoMain extends AbstractComponent {
+  constructor(events) {
+    super();
+    this._events = events;
   }
 
   getTemplate() {
-    return createTripInfoMainTemplate(this._startDate, this._endDate, this._cities);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
+    return createTripInfoMainTemplate(this._events);
   }
 }
 

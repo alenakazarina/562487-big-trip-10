@@ -1,4 +1,5 @@
-import {formatDatetime, createElement} from '../utils';
+import AbstractComponent from './abstract-component';
+import {formatDatetime} from '../utils/common';
 
 const createTripDayTemplate = (day, items, count) => {
   const tripDay = `${day.toString().substring(3, 7)} ${day.getDate()}`;
@@ -18,27 +19,16 @@ const createTripDayTemplate = (day, items, count) => {
   `;
 };
 
-class TripDay {
+class TripDay extends AbstractComponent {
   constructor(day, events, count) {
+    super();
     this._day = day;
     this._events = events;
     this._count = count;
-    this._element = null;
   }
 
   getTemplate() {
     return createTripDayTemplate(this._day, this._events, this._count);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }
 
