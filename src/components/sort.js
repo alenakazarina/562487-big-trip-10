@@ -1,15 +1,15 @@
 import AbstractComponent from './abstract-component';
 
-export const SortTypes = {
-  EVENT: {
+export const sortTypes = {
+  event: {
     id: `event`,
     sortFn: (events) => events.slice()
   },
-  TIME: {
+  time: {
     id: `time`,
     sortFn: (events) => events.slice().sort((a, b) => (b.endDate - b.startDate) - (a.endDate - a.startDate))
   },
-  PRICE: {
+  price: {
     id: `price`,
     sortFn: (events) => events.slice().sort((a, b) => b.price - a.price)
   }
@@ -24,7 +24,7 @@ const createDirectionIcon = () => {
 };
 
 const createSortFitlerTemplate = (sortType, isChecked) => {
-  const directionIcon = (sortType === SortTypes.TIME.id || sortType === SortTypes.PRICE.id) ? createDirectionIcon() : ``;
+  const directionIcon = (sortType === sortTypes.time.id || sortType === sortTypes.price.id) ? createDirectionIcon() : ``;
 
   return `
     <div class="trip-sort__item  trip-sort__item--${sortType}">
@@ -42,7 +42,7 @@ const createSortFitlerTemplate = (sortType, isChecked) => {
 };
 
 const createSortTemplate = () => {
-  const sortFitlersTemplate = Object.values(SortTypes).map((sortType, i) => createSortFitlerTemplate(sortType.id, i === 0)).join(`\n`);
+  const sortFitlersTemplate = Object.keys(sortTypes).map((sortType, i) => createSortFitlerTemplate(sortType, i === 0)).join(`\n`);
 
   return `
     <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
@@ -56,7 +56,7 @@ const createSortTemplate = () => {
 class Sort extends AbstractComponent {
   constructor() {
     super();
-    this._active = SortTypes.EVENT.id;
+    this._active = sortTypes.event.id;
   }
 
   getTemplate() {

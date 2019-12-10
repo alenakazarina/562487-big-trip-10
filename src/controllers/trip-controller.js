@@ -1,4 +1,4 @@
-import SortComponent, {SortTypes} from '../components/sort';
+import SortComponent, {sortTypes} from '../components/sort';
 import TripDaysListComponent from '../components/trip-days-list';
 import TripDayComponent from '../components/trip-day';
 import EventComponent from '../components/event';
@@ -73,7 +73,8 @@ class TripController {
       const tripDaysListElement = this._tripDaysListComponent.getElement();
 
       this._sortComponent.setChangeSortOrderClickListener((sortType) => {
-        const sortedEvents = Object.values(SortTypes).filter((it) => it.id === sortType)[0].sortFn(events);
+        const sortedEvents = Object.values(sortTypes).find((it) => it.id === sortType).sortFn(events);
+
         tripDaysListElement.innerHTML = ``;
 
         if (sortType !== `event`) {
