@@ -2,6 +2,15 @@ import AbstractComponent from './abstract-component';
 import {formatDatetime} from '../utils/common';
 
 const createTripDayTemplate = (day, items, count) => {
+  if (!day && !items && !count) {
+    return `
+      <li class="trip-days__item  day">
+        <div class="day__info"></div>
+        <ul class="trip-events__list"></ul>
+      </li>
+    `;
+  }
+
   const tripDay = `${day.toString().substring(3, 7)} ${day.getDate()}`;
   const datetime = formatDatetime(day);
   const isEmpty = items.length === 0;
