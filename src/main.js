@@ -2,7 +2,7 @@ import TripInfoMainComponent from './components/trip-info-main';
 import TripInfoCostComponent from './components/trip-info-cost';
 import MenuComponent from './components/menu';
 import FiltersComponent from './components/filters';
-import TripController from './controllers/trip-controller';
+import TripController from './controllers/trip';
 import {render} from './utils/render';
 import {generateEvents} from './mocks/events';
 import {generateFilters} from './mocks/filters';

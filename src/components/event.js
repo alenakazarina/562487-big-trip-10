@@ -1,7 +1,6 @@
 import AbstractComponent from './abstract-component';
 import {castTimeFormat, formatFullDatetime} from '../utils/common';
-
-const MAX_OFFERS_COUNT_TO_SHOW = 3;
+import {MAX_OFFERS_COUNT_TO_SHOW} from '../const';
 
 const getEventDuration = (startDate, endDate) => {
   let durationDays = Math.floor((endDate - startDate) / (1000 * 3600 * 24));
@@ -90,7 +89,7 @@ class Event extends AbstractComponent {
     return createEventTemplate(this._event);
   }
 
-  setClickListener(handler) {
+  setClickHandler(handler) {
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, handler);
   }
 }

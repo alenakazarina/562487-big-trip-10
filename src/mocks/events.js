@@ -1,47 +1,18 @@
 import {
   PHOTO_PATH,
-  DEFAULT_DESCRIPTION,
   DEFAULT_CITIES,
   ACTIVITY_EVENTS,
   TRANSFER_EVENTS,
-  ICON_PATHS,
-  OFFERS
+  MAX_OFFERS_COUNT
 } from '../const';
 
+import {getIcon, generateDescription, getRandomIntegerNumber, generateOffers, getRandomArrayItem} from '../utils/common';
+
 const PHOTOS_COUNT = 5;
-
-const MAX_OFFERS_COUNT = 3;
-
-const getIcon = (eventType) => ICON_PATHS.filter((it) => it.startsWith(eventType.toLowerCase())).join();
 
 const generateEventPhotos = (count) => new Array(count).fill(``)
   .map(() => Math.round(Math.random() * 1000))
   .map((number) => PHOTO_PATH.concat(number));
-
-const getRandomArrayItem = (array) => {
-  const randomIndex = getRandomIntegerNumber(0, array.length);
-  return array[randomIndex];
-};
-
-const getRandomIntegerNumber = (min, max) => {
-  return min + Math.floor(max * Math.random());
-};
-
-const getRandomArray = (items, maxLength) => {
-  const length = getRandomIntegerNumber(0, maxLength + 1);
-  return new Array(length).fill(``).map(() => getRandomArrayItem(items));
-};
-
-const generateDescription = () => {
-  const sentences = DEFAULT_DESCRIPTION.split(`.`).filter((it, i, arr) => (i !== arr.length - 1));
-  let count = getRandomIntegerNumber(1, 3);
-  let description = ``;
-  while (count) {
-    description = description.concat(getRandomArrayItem(sentences), `.`);
-    count--;
-  }
-  return description;
-};
 
 const generateDatesArray = (daysCount) => {
   return new Array(daysCount)
@@ -103,7 +74,7 @@ const generateEvent = (eventID, dates) => {
     price: getRandomIntegerNumber(1, 10000),
     description: generateDescription(),
     photos: generateEventPhotos(PHOTOS_COUNT),
-    offers: getRandomArray(OFFERS, MAX_OFFERS_COUNT)
+    offers: generateOffers(MAX_OFFERS_COUNT)
   };
 };
 
