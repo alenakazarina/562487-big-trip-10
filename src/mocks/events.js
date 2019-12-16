@@ -74,7 +74,7 @@ const generateEvent = (eventID, dates) => {
     price: getRandomIntegerNumber(1, 10000),
     description: generateDescription(),
     photos: generateEventPhotos(PHOTOS_COUNT),
-    offers: generateOffers(MAX_OFFERS_COUNT)
+    offers: generateOffers(eventName, MAX_OFFERS_COUNT)
   };
 };
 

@@ -1,6 +1,7 @@
 import AbstractSmartComponent from './abstract-smart-component';
-import {formatTimeWithSlashes, getIcon, getEventType, generateDescription, generateOffers, capitalizeFirstLetter} from '../utils/common';
-import {ACTIVITY_EVENTS, TRANSFER_EVENTS, MAX_OFFERS_COUNT, DEFAULT_CITIES} from '../const';
+import {
+  formatTimeWithSlashes, getIcon, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
+import {ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES} from '../const';
 
 const createFavoriteButtonTemplate = (id, isFavorite) => {
   const isChecked = isFavorite ? `checked` : ``;
@@ -54,16 +55,10 @@ const createOfferSelector = (offer, isChecked, id) => {
 };
 
 const createOffersSection = (event) => {
-  const {id, offers} = event;
+  const {id, offers, name} = event;
+  const eventName = name.split(`-`)[0].toUpperCase();
 
-  let availableOffers = generateOffers(MAX_OFFERS_COUNT);
-  const isSameOffers = (a, b) => a.type === b.type && a.title === b.title && a.price === b.price;
-
-  offers.forEach((offer) => {
-    if (offers.length && availableOffers.findIndex((it) => isSameOffers(it, offer)) === -1) {
-      availableOffers.push(offer);
-    }
-  });
+  const availableOffers = AVAILABLE_OFFERS[eventName];
 
   const offersTemplate = availableOffers.map((offer) => createOfferSelector(offer, offers.some((it) => isSameOffers(it, offer)), id)).join(`\n`);
 
@@ -270,14 +265,14 @@ class EditEventForm extends AbstractSmartComponent {
 
     element.querySelector(`.event__favorite-checkbox`).addEventListener(`change`, () => {
       this._event = Object.assign({}, this._event, {isFavorite: !this._event.isFavorite});
-      this.rerender();
     });
 
     element.querySelector(`.event__type-list`).addEventListener(`change`, (evt) => {
       this._event = Object.assign({}, this._event,
           {type: getEventType(evt.target.value)},
           {name: evt.target.value},
-          {icon: getIcon(evt.target.value)});
+          {icon: getIcon(evt.target.value)},
+          {offers: []});
       this.rerender();
     });
 
@@ -292,8 +287,18 @@ class EditEventForm extends AbstractSmartComponent {
             {description: generateDescription()}
         );
       }
-
       this.rerender();
+    });
+
+    element.querySelector(`.event__section--offers`).addEventListener(`change`, () => {
+      this._event.offers = [].map.call(element.querySelectorAll(`.event__offer-checkbox:checked + label`), (it) => {
+        const offerLabel = it.innerText;
+        return {
+          type: getOfferType(offerLabel),
+          title: offerLabel.split(`+`)[0],
+          price: +offerLabel.split(`€`)[1]
+        };
+      });
     });
   }
 }

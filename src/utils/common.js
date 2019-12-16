@@ -1,4 +1,4 @@
-import {DEFAULT_DESCRIPTION, ICON_PATHS, OFFERS, ACTIVITY_EVENTS} from '../const';
+import {DEFAULT_DESCRIPTION, ICON_PATHS, ACTIVITY_EVENTS, OFFER_TYPES} from '../const';
 
 const castTimeFormat = (value) => {
   return value < 10 ? `0${value}` : String(value);
@@ -39,7 +39,7 @@ const getRandomIntegerNumber = (min, max) => {
 };
 
 const getRandomArray = (items, maxLength) => {
-  const length = getRandomIntegerNumber(0, maxLength + 1);
+  const length = getRandomIntegerNumber(0, maxLength);
   return new Array(length).fill(``).map(() => getRandomArrayItem(items));
 };
 
@@ -62,28 +62,68 @@ const capitalizeFirstLetter = (str) => {
   return `${str.slice(0, 1).toUpperCase()}${str.slice(1)}`;
 };
 
-const generateOffers = (count) => {
-  let randomOffers = getRandomArray(OFFERS, count);
-  if (!randomOffers.length) {
-    return randomOffers;
-  }
+const generateOffers = (name, count) => {
+  const eventName = name.split(`-`)[0].toUpperCase();
+  let randomOffers = new Set(getRandomArray(AVAILABLE_OFFERS[eventName], count));
 
-  let offers = [];
-  if (randomOffers.filter((it) => it.type === `luggage`).length) {
-    offers.push(getRandomArrayItem(randomOffers.filter((it) => it.type === `luggage`)));
-  }
-  if (randomOffers.filter((it) => it.type === `meal`).length) {
-    offers.push(getRandomArrayItem(randomOffers.filter((it) => it.type === `meal`)));
-  }
-  if (randomOffers.filter((it) => it.type === `comfort`).length) {
-    offers.push(getRandomArrayItem(randomOffers.filter((it) => it.type === `comfort`)));
-  }
-  if (randomOffers.filter((it) => it.type === `seats`).length) {
-    offers.push(getRandomArrayItem(randomOffers.filter((it) => it.type === `seats`)));
-  }
-
-  return offers;
+  return Array.from(randomOffers);
 };
+
+const getOfferType = (offer) => {
+  return OFFER_TYPES.filter((offerType) => offer.toLowerCase().includes(offerType)).join();
+};
+
+const getOfferObjects = (offers) => offers.map((offer) => ({
+  type: getOfferType(offer),
+  title: offer.split(`+`)[0],
+  price: +offer.split(`+`)[1].split(` `)[0]
+}));
+
+const AVAILABLE_OFFERS = {
+  TAXI: getOfferObjects([
+    `Add luggage +5 €`,
+    `Switch to comfort class +50 €`
+  ]),
+  BUS: getOfferObjects([
+    `Add luggage +10 €`,
+    `Choose seats +10 €`
+  ]),
+  TRAIN: getOfferObjects([
+    `Add luggage +15 €`,
+    `Switch to comfort class +100 €`,
+    `Add meal +5 €`
+  ]),
+  SHIP: getOfferObjects([
+    `Add luggage +15 €`,
+    `Switch to comfort class +100 €`,
+    `Add meal +5 €`
+  ]),
+  TRANSPORT: getOfferObjects([
+    `Add luggage +15 €`
+  ]),
+  DRIVE: getOfferObjects([
+    `Add luggage +15 €`,
+    `Switch to comfort class +100 €`
+  ]),
+  FLIGHT: getOfferObjects([
+    `Add luggage +15 €`,
+    `Switch to comfort class +100 €`,
+    `Add meal +5 €`,
+    `Choose seats +20 €`
+  ]),
+  CHECK: getOfferObjects([
+    `Switch to comfort class +200 €`,
+    `Add meal +5 €`
+  ]),
+  SIGHTSEEING: getOfferObjects([
+    `Choose seats +20 €`
+  ]),
+  RESTAURANT: getOfferObjects([
+    `Choose seats +30 €`
+  ])
+};
+
+const isSameOffers = (a, b) => a.type === b.type && a.title === b.title && a.price === b.price;
 
 export {
   castTimeFormat,
@@ -97,5 +137,9 @@ export {
   getIcon,
   capitalizeFirstLetter,
   generateOffers,
-  getEventType
+  getEventType,
+  getOfferType,
+  getOfferObjects,
+  isSameOffers,
+  AVAILABLE_OFFERS
 };

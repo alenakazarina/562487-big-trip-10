@@ -40,33 +40,12 @@ const ICON_PATHS = [
   `transport.png`
 ];
 
-const getOfferType = (offer) => {
-  return [
-    `meal`,
-    `luggage`,
-    `comfort`,
-    `seats`
-  ].filter((offerType) => offer.toLowerCase().includes(offerType)).join();
-};
-
-const OFFERS = [
-  `Add luggage +5 €`,
-  `Add luggage +10 €`,
-  `Add luggage +20 €`,
-  `Switch to comfort class +100 €`,
-  `Switch to comfort class +150 €`,
-  `Switch to comfort class +200 €`,
-  `Add meal +2 €`,
-  `Add meal +5 €`,
-  `Add meal +10 €`,
-  `Choose seats +5 €`,
-  `Choose seats +10 €`,
-  `Choose seats +20 €`
-].map((offer) => ({
-  type: getOfferType(offer),
-  title: offer.split(`+`)[0],
-  price: +offer.split(`+`)[1].split(` `)[0]
-}));
+const OFFER_TYPES = [
+  `meal`,
+  `luggage`,
+  `comfort`,
+  `seats`
+];
 
 export {
   PHOTO_PATH,
@@ -75,7 +54,7 @@ export {
   ACTIVITY_EVENTS,
   TRANSFER_EVENTS,
   ICON_PATHS,
-  OFFERS,
+  OFFER_TYPES,
   MAX_OFFERS_COUNT,
   MAX_OFFERS_COUNT_TO_SHOW
 };
