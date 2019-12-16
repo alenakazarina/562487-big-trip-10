@@ -1,7 +1,6 @@
 import AbstractComponent from './abstract-component';
-import {castTimeFormat, formatFullDatetime} from '../utils/common';
-
-const MAX_OFFERS_COUNT_TO_SHOW = 3;
+import {castTimeFormat, formatFullDatetime, capitalizeFirstLetter} from '../utils/common';
+import {MAX_OFFERS_COUNT_TO_SHOW} from '../const';
 
 const getEventDuration = (startDate, endDate) => {
   let durationDays = Math.floor((endDate - startDate) / (1000 * 3600 * 24));
@@ -38,6 +37,7 @@ const createOfferTemplate = (offer) => {
 
 const createEventTemplate = (event) => {
   const {name, icon, price, startDate, endDate} = event;
+  const eventTitle = capitalizeFirstLetter(name);
 
   const start = getDatetime(startDate);
   const end = getDatetime(endDate);
@@ -52,7 +52,7 @@ const createEventTemplate = (event) => {
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${icon}" alt="${name} icon">
         </div>
-        <h3 class="event__title">${name}</h3>
+        <h3 class="event__title">${eventTitle}</h3>
 
         <div class="event__schedule">
           <p class="event__time">
@@ -90,7 +90,7 @@ class Event extends AbstractComponent {
     return createEventTemplate(this._event);
   }
 
-  setClickListener(handler) {
+  setClickHandler(handler) {
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, handler);
   }
 }

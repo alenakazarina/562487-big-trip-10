@@ -63,7 +63,7 @@ class Sort extends AbstractComponent {
     return createSortTemplate();
   }
 
-  setChangeSortOrderClickListener(handler) {
+  setSortTypeChangeHandler(handler) {
     this.getElement().addEventListener(`click`, (evt) => {
       const {sortType} = evt.target.dataset;
 
