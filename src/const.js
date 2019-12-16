@@ -1,4 +1,4 @@
-const PHOTO_PATH = `http://picsum.photos/300/150?r=`;
+const PHOTO_PATH = `https://picsum.photos/300/150?r=`;
 const MAX_OFFERS_COUNT_TO_SHOW = 3;
 const MAX_OFFERS_COUNT = 5;
 

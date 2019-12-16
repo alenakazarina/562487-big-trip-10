@@ -64,7 +64,7 @@ const capitalizeFirstLetter = (str) => {
 
 const generateOffers = (name, count) => {
   const eventName = name.split(`-`)[0].toUpperCase();
-  let randomOffers = new Set(getRandomArray(AVAILABLE_OFFERS[eventName], count));
+  const randomOffers = new Set(getRandomArray(AVAILABLE_OFFERS[eventName], count));
 
   return Array.from(randomOffers);
 };
