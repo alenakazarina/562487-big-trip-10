@@ -189,7 +189,11 @@ const createFormHeaderTemplate = (event) => {
         <span class="visually-hidden">Price</span>
         &euro;
       </label>
-      <input class="event__input  event__input--price" id="event-price-${id}" type="text" name="event-price" value="${price}">
+      <input class="event__input  event__input--price" id="event-price-${id}"
+        type="text" name="event-price"
+        value="${price}"
+        required
+        pattern="[0-9]{1,5}">
     </div>
 
     <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
@@ -290,26 +294,44 @@ class EditEventForm extends AbstractSmartComponent {
       const inputValue = evt.target.value.trim();
       const isValidDestination = DEFAULT_CITIES.some((it) => it === inputValue);
       if (!isValidDestination) {
-        evt.target.value = this._event.destination;
+        evt.target.setCustomValidity(`Please, choose one from list`);
       } else {
         this._event = Object.assign({}, this._event,
             {destination: evt.target.value.trim()},
             {description: generateDescription()}
         );
+        evt.target.setCustomValidity(``);
       }
-      this.rerender();
     });
 
-    element.querySelector(`.event__field-group--time`).addEventListener(`change`, (evt) => {
+    element.querySelector(`input[name=event-start-time]`).addEventListener(`change`, (evt) => {
       const dateValue = parseDateWithSlashes(evt.target.value);
-      const isStartTime = evt.target.name === `event-start-time`;
+      if (dateValue > this._event.endDate) {
+        evt.target.setCustomValidity(`Please, choose valid start time`);
+        return;
+      }
+      this._event.startDate = dateValue;
+      evt.target.setCustomValidity(``);
+    });
 
-      if (isStartTime && dateValue < this._event.endDate) {
-        this._event.startDate = dateValue;
+    element.querySelector(`input[name=event-end-time]`).addEventListener(`change`, (evt) => {
+      const dateValue = parseDateWithSlashes(evt.target.value);
+      if (dateValue < this._event.startDate) {
+        evt.target.setCustomValidity(`Please, choose valid end time`);
+        return;
       }
-      if (!isStartTime && dateValue > this._event.startDate) {
-        this._event.endDate = dateValue;
+      this._event.endDate = dateValue;
+      evt.target.setCustomValidity(``);
+    });
+
+    element.querySelector(`.event__input--price`).addEventListener(`change`, (evt) => {
+      const price = evt.target.value;
+      if (evt.target.validity.patternMismatch || evt.target.validity.valueMissing) {
+        evt.target.setCustomValidity(`Please, enter valid price`);
+        return;
       }
+      this._event.price = price;
+      evt.target.setCustomValidity(``);
     });
 
     element.querySelector(`.event__section--offers`).addEventListener(`change`, () => {
@@ -336,12 +358,14 @@ class EditEventForm extends AbstractSmartComponent {
 
     this._flatpickr.START = flatpickr(startDateInput, {
       enableTime: true,
+      allowInput: true,
       defaultDate: this._event.startDate,
       formatDate: formatTimeWithSlashes
     });
 
     this._flatpickr.END = flatpickr(endDateInput, {
       enableTime: true,
+      allowInput: true,
       defaultDate: this._event.endDate,
       formatDate: formatTimeWithSlashes
     });

@@ -42,7 +42,7 @@ const getDatetime = (date) => {
 };
 
 const getWeekDay = (date) => {
-  return moment(date).format(`ddd`);
+  return moment(date).format(`ddd DD`);
 };
 
 const getRandomArrayItem = (array) => {
