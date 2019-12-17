@@ -1,32 +1,48 @@
 import {DEFAULT_DESCRIPTION, ICON_PATHS, ACTIVITY_EVENTS, OFFER_TYPES} from '../const';
+import moment from 'moment';
 
-const castTimeFormat = (value) => {
-  return value < 10 ? `0${value}` : String(value);
-};
 
 const formatTimeWithSlashes = (date) => {
-  // 18/03/19 12:25
-  const day = castTimeFormat(date.getDate());
-  const month = castTimeFormat(date.getMonth() + 1);
-  const year = date.getFullYear() % 2000;
-  const hours = castTimeFormat(date.getHours());
-  const minutes = castTimeFormat(date.getMinutes());
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+  return `${moment(date).format(`DD/MM/YY hh:mm`)}`;
+};
+
+const parseDateWithSlashes = (dateString) => {
+  const [date, time] = dateString.split(` `);
+  const [day, month, year] = date.split(`/`);
+  return new Date(moment(`${day}-${month}-${year} ${time}`, `DD-MM-YY hh:mm`).format());
 };
 
 const formatDatetime = (date) => {
-  // 2019-10-19
-  const year = date.getFullYear();
-  const month = castTimeFormat(date.getMonth() + 1);
-  const day = castTimeFormat(date.getDate());
-  return `${year}-${month}-${day}`;
+  return `${moment(date).format(`YYYY-MM-DD`)}`;
 };
 
 const formatFullDatetime = (date) => {
-  // 2019-10-19T22:30
-  const hours = castTimeFormat(date.getHours());
-  const minutes = castTimeFormat(date.getMinutes());
-  return formatDatetime(date).concat(`T${hours}:${minutes}`);
+  return moment(date).format(moment.HTML5_FMT.DATETIME_LOCAL);
+};
+
+const getDuration = (startDate, endDate) => {
+  const duration = moment.duration(moment(endDate).diff(moment(startDate)));
+
+  const durationDays = duration.get(`days`) ? `${duration.get(`days`)}D` : ``;
+  const durationHours = (durationDays || duration.get(`hours`)) ? `${duration.get(`hours`)}H` : ``;
+  const durationMinutes = (durationHours || duration.get(`minutes`)) ? `${duration.get(`minutes`)}M` : ``;
+
+  return {
+    days: durationDays,
+    hours: durationHours,
+    minutes: durationMinutes
+  };
+};
+
+const getDatetime = (date) => {
+  return {
+    datetime: formatFullDatetime(date),
+    time: moment(date).format(`hh:mm`)
+  };
+};
+
+const getWeekDay = (date) => {
+  return moment(date).format(`ddd`);
 };
 
 const getRandomArrayItem = (array) => {
@@ -126,10 +142,13 @@ const AVAILABLE_OFFERS = {
 const isSameOffers = (a, b) => a.type === b.type && a.title === b.title && a.price === b.price;
 
 export {
-  castTimeFormat,
   formatTimeWithSlashes,
+  parseDateWithSlashes,
   formatDatetime,
   formatFullDatetime,
+  getDuration,
+  getDatetime,
+  getWeekDay,
   getRandomArrayItem,
   getRandomIntegerNumber,
   getRandomArray,

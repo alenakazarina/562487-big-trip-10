@@ -1,29 +1,6 @@
 import AbstractComponent from './abstract-component';
-import {castTimeFormat, formatFullDatetime, capitalizeFirstLetter} from '../utils/common';
+import {getDuration, getDatetime, capitalizeFirstLetter} from '../utils/common';
 import {MAX_OFFERS_COUNT_TO_SHOW} from '../const';
-
-const getEventDuration = (startDate, endDate) => {
-  let durationDays = Math.floor((endDate - startDate) / (1000 * 3600 * 24));
-  let durationHours = Math.floor((endDate - startDate) / (1000 * 3600));
-  let durationMinutes = Math.floor((endDate - startDate) / (1000 * 60) % 60);
-
-  durationDays = durationDays ? `${durationDays}D` : ``;
-  durationHours = (durationDays || durationHours) ? `${castTimeFormat(durationHours)}H` : ``;
-  durationMinutes = (durationHours || durationMinutes) ? `${castTimeFormat(durationMinutes)}M` : ``;
-  return {
-    days: durationDays,
-    hours: durationHours,
-    minutes: durationMinutes
-  };
-};
-
-const getDatetime = (date) => {
-  const dateTime = formatFullDatetime(date);
-  return {
-    datetime: dateTime,
-    time: dateTime.substring(dateTime.length - 5, dateTime.length)
-  };
-};
 
 const createOfferTemplate = (offer) => {
   return `
@@ -42,7 +19,7 @@ const createEventTemplate = (event) => {
   const start = getDatetime(startDate);
   const end = getDatetime(endDate);
 
-  const {days, hours, minutes} = getEventDuration(startDate, endDate);
+  const {days, hours, minutes} = getDuration(startDate, endDate);
 
   const offers = event.offers.slice(0, MAX_OFFERS_COUNT_TO_SHOW).map((it) => createOfferTemplate(it)).join(`\n`);
 

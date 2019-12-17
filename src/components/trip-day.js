@@ -1,5 +1,5 @@
 import AbstractComponent from './abstract-component';
-import {formatDatetime} from '../utils/common';
+import {formatDatetime, getWeekDay} from '../utils/common';
 
 const createTripDayTemplate = (day, items, count) => {
   if (!day && !items && !count) {
@@ -11,7 +11,7 @@ const createTripDayTemplate = (day, items, count) => {
     `;
   }
 
-  const tripDay = `${day.toString().substring(3, 7)} ${day.getDate()}`;
+  const tripDay = getWeekDay(day);
   const datetime = formatDatetime(day);
   const isEmpty = items.length === 0;
 

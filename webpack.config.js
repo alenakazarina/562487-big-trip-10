@@ -1,5 +1,6 @@
 const path = require(`path`);
 const HtmlWebpackPlugin = require(`html-webpack-plugin`);
+const MomentLocalesPlugin = require(`moment-locales-webpack-plugin`);
 
 module.exports = {
   mode: `development`,
@@ -8,9 +9,20 @@ module.exports = {
     filename: `bundle.[contenthash].js`,
     path: path.join(__dirname, `public`)
   },
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        use: [`style-loader`, `css-loader`],
+      },
+    ],
+  },
   plugins: [
     new HtmlWebpackPlugin({
       template: `./public/index.html`
+    }),
+    new MomentLocalesPlugin({
+      localesToKeep: [`es-us`]
     })
   ],
   devtool: `source-map`,

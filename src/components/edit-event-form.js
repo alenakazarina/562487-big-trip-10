@@ -1,7 +1,9 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import {
-  formatTimeWithSlashes, getIcon, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
+  formatTimeWithSlashes, parseDateWithSlashes, getIcon, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
 import {ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES} from '../const';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 const createFavoriteButtonTemplate = (id, isFavorite) => {
   const isChecked = isFavorite ? `checked` : ``;
@@ -228,6 +230,9 @@ class EditEventForm extends AbstractSmartComponent {
 
     this._submitHandler = null;
     this._resetHandler = null;
+    this._flatpickr = null;
+
+    this._applyFlatpickr();
     this._subscribeOnEvents();
   }
 
@@ -253,6 +258,11 @@ class EditEventForm extends AbstractSmartComponent {
     this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
     this._subscribeOnEvents();
+  }
+
+  rerender() {
+    super.rerender();
+    this._applyFlatpickr();
   }
 
   reset() {
@@ -290,6 +300,18 @@ class EditEventForm extends AbstractSmartComponent {
       this.rerender();
     });
 
+    element.querySelector(`.event__field-group--time`).addEventListener(`change`, (evt) => {
+      const dateValue = parseDateWithSlashes(evt.target.value);
+      const isStartTime = evt.target.name === `event-start-time`;
+
+      if (isStartTime && dateValue < this._event.endDate) {
+        this._event.startDate = dateValue;
+      }
+      if (!isStartTime && dateValue > this._event.startDate) {
+        this._event.endDate = dateValue;
+      }
+    });
+
     element.querySelector(`.event__section--offers`).addEventListener(`change`, () => {
       this._event.offers = [].map.call(element.querySelectorAll(`.event__offer-checkbox:checked + label`), (it) => {
         const offerLabel = it.innerText;
@@ -299,6 +321,29 @@ class EditEventForm extends AbstractSmartComponent {
           price: +offerLabel.split(`€`)[1]
         };
       });
+    });
+  }
+
+  _applyFlatpickr() {
+    if (this._flatpickr) {
+      Object.values(this._flatpickr).forEach((it) => it.destroy());
+      this._flatpickr = null;
+    }
+
+    const [startDateInput, endDateInput] = Array.from(this.getElement().querySelectorAll(`.event__input--time`));
+
+    this._flatpickr = Object.assign({}, {START: {}, END: {}});
+
+    this._flatpickr.START = flatpickr(startDateInput, {
+      enableTime: true,
+      defaultDate: this._event.startDate,
+      formatDate: formatTimeWithSlashes
+    });
+
+    this._flatpickr.END = flatpickr(endDateInput, {
+      enableTime: true,
+      defaultDate: this._event.endDate,
+      formatDate: formatTimeWithSlashes
     });
   }
 }
