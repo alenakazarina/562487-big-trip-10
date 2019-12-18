@@ -190,10 +190,10 @@ const createFormHeaderTemplate = (event) => {
         &euro;
       </label>
       <input class="event__input  event__input--price" id="event-price-${id}"
-        type="text" name="event-price"
+        type="number" name="event-price"
         value="${price}"
         required
-        pattern="[0-9]{1,5}">
+        min="0">
     </div>
 
     <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
@@ -307,7 +307,7 @@ class EditEventForm extends AbstractSmartComponent {
     element.querySelector(`input[name=event-start-time]`).addEventListener(`change`, (evt) => {
       const dateValue = parseDateWithSlashes(evt.target.value);
       if (dateValue > this._event.endDate) {
-        evt.target.setCustomValidity(`Please, choose valid start time`);
+        evt.target.setCustomValidity(`The start time should be earlier than the end time`);
         return;
       }
       this._event.startDate = dateValue;
@@ -317,7 +317,7 @@ class EditEventForm extends AbstractSmartComponent {
     element.querySelector(`input[name=event-end-time]`).addEventListener(`change`, (evt) => {
       const dateValue = parseDateWithSlashes(evt.target.value);
       if (dateValue < this._event.startDate) {
-        evt.target.setCustomValidity(`Please, choose valid end time`);
+        evt.target.setCustomValidity(`The end time should be later than the start time`);
         return;
       }
       this._event.endDate = dateValue;
@@ -326,11 +326,11 @@ class EditEventForm extends AbstractSmartComponent {
 
     element.querySelector(`.event__input--price`).addEventListener(`change`, (evt) => {
       const price = evt.target.value;
-      if (evt.target.validity.patternMismatch || evt.target.validity.valueMissing) {
+      if (evt.target.validity.rangeUnderflow || evt.target.validity.valueMissing) {
         evt.target.setCustomValidity(`Please, enter valid price`);
         return;
       }
-      this._event.price = price;
+      this._event.price = +price;
       evt.target.setCustomValidity(``);
     });
 
