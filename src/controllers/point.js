@@ -1,11 +1,7 @@
 import {render, replace} from '../utils/render';
 import EventComponent from '../components/event';
 import EditEventComponent from '../components/edit-event-form';
-
-const Mode = {
-  DEFAULT: `default`,
-  EDIT: `edit`
-};
+import {Mode} from '../const';
 
 class PointController {
   constructor(container, onDataChange, onViewChange) {

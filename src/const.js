@@ -47,6 +47,23 @@ const OFFER_TYPES = [
   `seats`
 ];
 
+const SortType = {
+  EVENT: `event`,
+  TIME: `time`,
+  PRICE: `price`
+};
+
+const FilterType = {
+  EVERYTHING: `Everything`,
+  FUTURE: `Future`,
+  PAST: `Past`
+};
+
+const Mode = {
+  DEFAULT: `default`,
+  EDIT: `edit`
+};
+
 export {
   PHOTO_PATH,
   DEFAULT_DESCRIPTION,
@@ -56,6 +73,9 @@ export {
   ICON_PATHS,
   OFFER_TYPES,
   MAX_OFFERS_COUNT,
-  MAX_OFFERS_COUNT_TO_SHOW
+  MAX_OFFERS_COUNT_TO_SHOW,
+  SortType,
+  FilterType,
+  Mode
 };
 
