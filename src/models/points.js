@@ -17,9 +17,9 @@ const getPointsByFilter = (points, filterType) => {
     case FilterType.EVERYTHING:
       return Array.from(points);
     case FilterType.FUTURE:
-      return points.filter((point) => point > Date.now());
+      return points.filter((point) => point.startDate > Date.now());
     case FilterType.PAST:
-      return points.filter((day) => day < Date.now());
+      return points.filter((point) => point.startDate < Date.now());
   }
   return points;
 };
@@ -40,14 +40,15 @@ class Points {
     return getSortedPoints(getPointsByFilter(this._points, this._activeFilterType), this._activeSortType);
   }
 
-  getPointsDates() {
-    const pointsDates = this._getPointsDates();
+  getPointsDates(points) {
+    const pointsDates = this._getPointsDates(points);
     return pointsDates;
   }
 
   setPoints(points) {
-    this._points = points.map((point) => Object.assign({}, point, {isFavorite: false}));
-    this._pointsDates = this._getPointsDates();
+    this._points = points.map((point) => Object.assign({}, point, {isFavorite: false})).sort((a, b) => a.startDate - b.startDate);
+
+    this._pointsDates = this._getPointsDates(this._points);
   }
 
   addPoint(point) {
@@ -78,16 +79,13 @@ class Points {
   }
 
   setFilter(filterType) {
-    if (Object.values(FilterType).some((it) => it === filterType)) {
-      this._activeFilterType = filterType;
-      this._callHandlers(this._filterChangeHandlers);
-    }
+    this._activeFilterType = filterType;
+    this._callHandlers(this._filterChangeHandlers);
   }
 
   setSort(sortType) {
     if (Object.values(SortType).some((it) => it === sortType)) {
       this._activeSortType = sortType;
-      this._callHandlers(this._sortTypeChangeHandlers);
     }
   }
 
@@ -111,10 +109,11 @@ class Points {
     return this._points.findIndex((it) => it.id === id);
   }
 
-  _getPointsDates() {
-    return this._points
+  _getPointsDates(points) {
+    return points
     .map((point) => point.startDate)
-    .filter((date, i, arr) => arr.slice(i + 1, arr.length).every((it) => it !== date));
+    .filter((date, i, arr) => arr.slice(i + 1, arr.length).every((it) => it !== date))
+    .sort((a, b) => a - b);
   }
 }
 
