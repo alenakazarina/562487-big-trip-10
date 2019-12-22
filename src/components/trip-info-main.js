@@ -1,5 +1,5 @@
 import AbstractComponent from './abstract-component';
-import {isSameMonth, formatMonthDay} from '../utils/common';
+import {isSameMonth, formatMonthDay, getDatesDiff} from '../utils/common';
 
 const createTripInfoMainTemplate = (events) => {
   if (!events.length) {
@@ -34,7 +34,7 @@ const createTripInfoMainTemplate = (events) => {
 class TripInfoMain extends AbstractComponent {
   constructor(events) {
     super();
-    this._events = events;
+    this._events = events.slice().sort((a, b) => getDatesDiff(a.startDate, b.startDate));
   }
 
   getTemplate() {

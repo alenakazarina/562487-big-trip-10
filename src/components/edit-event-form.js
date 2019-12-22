@@ -1,9 +1,15 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import {
-  formatTimeWithSlashes, parseDateWithSlashes, getIcon, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
-import {ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES} from '../const';
+  formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, generateEventPhotos, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
+import {ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES, PHOTOS_COUNT, Mode} from '../const';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+
+const HIDE_CLASS = `visually-hidden`;
+const DetailsMode = {
+  OPEN: `open`,
+  CLOSED: `closed`
+};
 
 const createFavoriteButtonTemplate = (id, isFavorite) => {
   const isChecked = isFavorite ? `checked` : ``;
@@ -141,7 +147,7 @@ const createEventTypeListSection = (event) => {
   `;
 };
 
-const createFormHeaderTemplate = (event) => {
+const createFormHeaderTemplate = (event, mode) => {
   const {id, type, name, price, destination, icon, isFavorite} = event;
 
   const preposition = (type === `activity`) ? `at` : `to`;
@@ -152,7 +158,9 @@ const createFormHeaderTemplate = (event) => {
 
   const eventTypeListSection = createEventTypeListSection(event);
   const destinationListSection = createDestinationListSection(id);
-  const favoriteButtonTemplate = createFavoriteButtonTemplate(id, isFavorite);
+
+  const resetButtonName = mode === Mode.ADD ? `Cancel` : `Delete`;
+  const isFavoriteButton = mode === Mode.ADD ? `` : createFavoriteButtonTemplate(id, isFavorite);
 
   return `
     <div class="event__type-wrapper">
@@ -168,20 +176,19 @@ const createFormHeaderTemplate = (event) => {
       <label class="event__label  event__type-output" for="event-destination-${id}">
         ${eventName} ${preposition}
       </label>
-      <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${destination}" list="destination-list-${id}">
+      <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${destination}" list="destination-list-${id}" required>
       ${destinationListSection}
     </div>
 
     <div class="event__field-group  event__field-group--time">
-      <label class="visually-hidden" for="event-start-time-${id}">
-        From
+      <label class="visually-hidden" for="event-start-time-${id}">From
       </label>
       <input class="event__input  event__input--time" id="event-start-time-${id}" type="text" name="event-start-time" value="${startDate}">
       &mdash;
       <label class="visually-hidden" for="event-end-time-${id}">
         To
       </label>
-      <input class="event__input  event__input--time" id="event-end-time-${id}" type="text" name="event-end-time" value="${endDate}">
+      <input class="event__input  event__input--time" id="event-end-time-${id}" type="text" name="event-end-time" value="${endDate}" required>
     </div>
 
     <div class="event__field-group  event__field-group--price">
@@ -197,18 +204,27 @@ const createFormHeaderTemplate = (event) => {
     </div>
 
     <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-    <button class="event__reset-btn" type="reset">Delete</button>
-
-    ${favoriteButtonTemplate}
+    <button class="event__reset-btn" type="reset">${resetButtonName}</button>
+    ${isFavoriteButton}
   `;
 };
 
-const createEditEventTemplate = (event) => {
-  const headerInner = createFormHeaderTemplate(event);
+const createEditEventTemplate = (event, mode) => {
+  const headerInner = createFormHeaderTemplate(event, mode);
   const offers = createOffersSection(event);
   const destination = createDestinationSection(event);
 
-  return `
+  return mode === Mode.ADD ? `
+    <form class="trip-events__item  event  event--edit" action="#" method="post">
+      <header class="event__header">
+        ${headerInner}
+      </header>
+      <section class="event__details visually-hidden">
+        ${offers}
+        ${destination}
+      </section>
+    </form>
+  ` : `
     <li class="trip-events__item">
       <form class="event  event--edit" action="#" method="post">
         <header class="event__header">
@@ -227,10 +243,12 @@ const createEditEventTemplate = (event) => {
 };
 
 class EditEventForm extends AbstractSmartComponent {
-  constructor(event) {
+  constructor(event, mode) {
     super();
     this._event = event;
     this._eventForReset = Object.assign({}, event);
+    this._mode = mode;
+    this._detailsMode = DetailsMode.CLOSED;
 
     this._submitHandler = null;
     this._deleteHandler = null;
@@ -242,39 +260,53 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event);
+    return createEditEventTemplate(this._event, this._mode);
   }
 
   setSubmitHandler(handler) {
     if (!this._submitHandler) {
       this._submitHandler = handler;
     }
-    this.getElement().querySelector(`form`).addEventListener(`submit`, handler);
+    if (this._mode === Mode.ADD) {
+      this.getElement().addEventListener(`submit`, this._submitHandler);
+    } else {
+      this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
+    }
   }
 
   setDeleteClickHandler(handler) {
     if (!this._deleteHandler) {
       this._deleteHandler = handler;
     }
-    this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, handler);
+    this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, this._deleteHandler);
   }
 
   setCloseButtonClickHandler(handler) {
     if (!this._resetHandler) {
       this._resetHandler = handler;
     }
-    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, handler);
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
   }
 
   recoveryListeners() {
-    this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
+    if (this._mode === Mode.Edit) {
+      this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
+    }
+    if (this._mode === Mode.ADD) {
+      this.getElement().addEventListener(`submit`, this._submitHandler);
+    } else {
+      this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
+    }
     this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, this._deleteHandler);
-    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
+    this._setValidation();
     this._subscribeOnEvents();
   }
 
   rerender() {
     super.rerender();
+    if (this._detailsMode === DetailsMode.OPEN) {
+      this._showDetails();
+    }
     this._applyFlatpickr();
   }
 
@@ -283,12 +315,56 @@ class EditEventForm extends AbstractSmartComponent {
     this.rerender();
   }
 
+  getFormData() {
+    const form = this.getElement();
+    const eventDescription = form.querySelector(`.event__destination-description`).innerText;
+    const formData = new FormData(form);
+    const eventName = form.querySelector(`.event__type-output`).innerText.trim().split(` `)[0];
+    const isActivityEvent = ACTIVITY_EVENTS.some((it) => it === eventName);
+    const eventPhotos = [].map.call(form.querySelectorAll(`.event__photo`), (it) => it.src);
+    const eventOffers = this._event.offers;
+
+    const newPoint = {
+      id: this._event.id,
+      type: isActivityEvent ? `activity` : `transfer`,
+      name: eventName,
+      icon: `${eventName}.png`,
+      startDate: parseDateWithSlashes(formData.get(`event-start-time`)),
+      endDate: parseDateWithSlashes(formData.get(`event-end-time`)),
+      destination: formData.get(`event-destination`),
+      description: eventDescription,
+      price: formData.get(`event-price`),
+      photos: eventPhotos,
+      offers: eventOffers,
+      isFavorite: false
+    };
+
+    return newPoint;
+  }
+
+  _showDetails() {
+    this.getElement().querySelector(`.event__details`).classList.remove(HIDE_CLASS);
+  }
+
+  _setValidation() {
+    const startDateInput = this._element.querySelector(`input[name=event-start-time]`);
+
+    if (getDatesDiff(this._event.startDate, this._event.endDate) > 0) {
+      startDateInput.setCustomValidity(`The start time should be earlier than the end time`);
+    } else {
+      startDateInput.setCustomValidity(``);
+    }
+  }
+
+
   _subscribeOnEvents() {
     const element = this.getElement();
 
-    element.querySelector(`.event__favorite-checkbox`).addEventListener(`change`, () => {
-      this._event = Object.assign({}, this._event, {isFavorite: !this._event.isFavorite});
-    });
+    if (this._mode !== Mode.ADD) {
+      element.querySelector(`.event__favorite-checkbox`).addEventListener(`change`, () => {
+        this._event = Object.assign({}, this._event, {isFavorite: !this._event.isFavorite});
+      });
+    }
 
     element.querySelector(`.event__type-list`).addEventListener(`change`, (evt) => {
       this._event = Object.assign({}, this._event,
@@ -303,44 +379,35 @@ class EditEventForm extends AbstractSmartComponent {
       const inputValue = evt.target.value.trim();
       const isValidDestination = DEFAULT_CITIES.some((it) => it === inputValue);
       if (!isValidDestination) {
-        evt.target.setCustomValidity(`Please, choose one from list`);
+        this._event.destination = ``;
+        this._detailsMode = DetailsMode.CLOSED;
       } else {
         this._event = Object.assign({}, this._event,
             {destination: evt.target.value.trim()},
             {description: generateDescription()}
         );
-        evt.target.setCustomValidity(``);
+        if (this._mode === Mode.ADD) {
+          this._event = Object.assign({}, this._event,
+              {photos: generateEventPhotos(PHOTOS_COUNT)}
+          );
+        }
+        this._detailsMode = DetailsMode.OPEN;
       }
+      this.rerender();
     });
 
     element.querySelector(`input[name=event-start-time]`).addEventListener(`change`, (evt) => {
-      const dateValue = parseDateWithSlashes(evt.target.value);
-      if (dateValue > this._event.endDate) {
-        evt.target.setCustomValidity(`The start time should be earlier than the end time`);
-        return;
-      }
-      this._event.startDate = dateValue;
-      evt.target.setCustomValidity(``);
+      this._event.startDate = parseDateWithSlashes(evt.target.value);
+      this._setValidation();
     });
 
     element.querySelector(`input[name=event-end-time]`).addEventListener(`change`, (evt) => {
-      const dateValue = parseDateWithSlashes(evt.target.value);
-      if (dateValue < this._event.startDate) {
-        evt.target.setCustomValidity(`The end time should be later than the start time`);
-        return;
-      }
-      this._event.endDate = dateValue;
-      evt.target.setCustomValidity(``);
+      this._event.endDate = parseDateWithSlashes(evt.target.value);
+      this._setValidation();
     });
 
     element.querySelector(`.event__input--price`).addEventListener(`change`, (evt) => {
-      const price = evt.target.value;
-      if (evt.target.validity.rangeUnderflow || evt.target.validity.valueMissing) {
-        evt.target.setCustomValidity(`Please, enter valid price`);
-        return;
-      }
-      this._event.price = +price;
-      evt.target.setCustomValidity(``);
+      this._event.price = +evt.target.value;
     });
 
     element.querySelector(`.event__section--offers`).addEventListener(`change`, () => {

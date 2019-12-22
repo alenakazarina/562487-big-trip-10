@@ -4,7 +4,7 @@ import {getUniqueDays, parseDateFromISOString, getDatesDiff} from '../utils/comm
 const getSortedPoints = (points, sortType) => {
   switch (sortType) {
     case SortType.EVENT:
-      return points.slice().sort((a, b) => getDatesDiff(a.startDate, b.startDate) > 0);
+      return points.slice().sort((a, b) => getDatesDiff(a.startDate, b.startDate));
     case SortType.TIME:
       return points.slice().sort((a, b) => getDatesDiff(b.endDate, b.startDate) - getDatesDiff(a.endDate, a.startDate));
     case SortType.PRICE:

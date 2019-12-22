@@ -12,6 +12,8 @@ class PointController {
     this._container = container;
     this._eventComponent = null;
     this._editEventComponent = null;
+    this._addEventFormComponent = null;
+    this._newEventId = 0;
 
     this._onDataChange = onDataChange;
     this._onViewChange = onViewChange;
@@ -19,14 +21,24 @@ class PointController {
     this._onEscKeyPress = this._onEscKeyPress.bind(this);
   }
 
-  render(event) {
-    this._event = event;
+  render(event, mode) {
+    this._mode = mode;
+    if (this._mode === Mode.ADD) {
+      this._newEventId = event.id;
+      this._addEventFormComponent = new EditEventComponent(event, Mode.ADD);
+      this._addEventFormComponent.setSubmitHandler(this._onDataChange);
+      this._addEventFormComponent.setDeleteClickHandler(this._onViewChange);
+      document.addEventListener(`keydown`, this._onEscKeyPress);
+      this._container.insertBefore(this._addEventFormComponent.getElement(event), this._container.lastElementChild);
+      return;
+    }
 
+    this._event = event;
     const oldEventComponent = this._eventComponent;
     const oldEditEventComponent = this._editEventComponent;
 
     this._eventComponent = new EventComponent(event);
-    this._editEventComponent = new EditEventComponent(event);
+    this._editEventComponent = new EditEventComponent(event, Mode.EDIT);
 
     this._eventComponent.setClickHandler(() => this._showEditForm());
 
@@ -64,21 +76,42 @@ class PointController {
   }
 
   enableOpenButton() {
-    this._container.querySelector(`.event__rollup-btn`).disabled = false;
+    this._eventComponent.getElement().querySelector(`.event__rollup-btn`).disabled = false;
   }
 
   getContainer() {
     return this._container;
   }
 
+  getFormData() {
+    return this._addEventFormComponent.getFormData();
+  }
+
+  removeAddEventForm() {
+    remove(this._addEventFormComponent);
+  }
+
   destroy() {
-    remove(this._editEventComponent);
-    remove(this._eventComponent);
-    document.removeEventListener(`keydown`, this._onEscKeyDown);
+    if (this._mode === Mode.EDIT) {
+      remove(this._editEventComponent);
+      remove(this._eventComponent);
+      document.removeEventListener(`keydown`, this._onEscKeyDown);
+    }
+
+    if (this._mode === Mode.ADD) {
+      remove(this._addEventFormComponent);
+      document.removeEventListener(`keydown`, this._onEscKeyDown);
+    }
   }
 
   _onEscKeyPress(evt) {
     if (evt.key === `Escape` || evt.key === `Esc`) {
+      if (this._mode === Mode.ADD) {
+        this._onViewChange();
+        remove(this._addEventFormComponent);
+        document.removeEventListener(`keydown`, this._onEscKeyPress);
+        return;
+      }
       this._showEvent();
     }
   }

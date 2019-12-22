@@ -15,11 +15,12 @@ const createOfferTemplate = (offer) => {
 const createEventTemplate = (event) => {
   const {name, icon, price, startDate, endDate} = event;
   const eventTitle = capitalizeFirstLetter(name);
-
   const start = getDatetime(startDate);
   const end = getDatetime(endDate);
-
-  const {days, hours, minutes} = getDuration(startDate, endDate);
+  let {days, hours, minutes} = getDuration(startDate, endDate);
+  if (!days && !hours && !minutes) {
+    minutes = `0M`;
+  }
 
   const offers = event.offers.slice(0, MAX_OFFERS_COUNT_TO_SHOW).map((it) => createOfferTemplate(it)).join(`\n`);
 

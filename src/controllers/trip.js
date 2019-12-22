@@ -2,9 +2,8 @@ import SortComponent from '../components/sort';
 import TripDaysListComponent from '../components/trip-days-list';
 import TripDayComponent from '../components/trip-day';
 import NoPointsComponent from '../components/no-points';
-import AddEventFormComponent from '../components/add-event-form';
 import PointController from './point';
-import {render, remove} from '../utils/render';
+import {render} from '../utils/render';
 import {isSameDay} from '../utils/common';
 import {SortType, Mode} from '../const';
 
@@ -27,7 +26,7 @@ const getDefaultEvent = (newEventId) => {
 const renderEvents = (events, container, onDataChange, onViewChange) => {
   return events.map((event) => {
     const pointController = new PointController(container, onDataChange, onViewChange);
-    pointController.render(event);
+    pointController.render(event, Mode.VIEW);
     return pointController;
   });
 };
@@ -46,15 +45,14 @@ class TripController {
     this._pointsModel = pointsModel;
     this._pointControllers = [];
     this._sortType = SortType.EVENT;
-    this._newEventId = 0;
 
     this._container = container;
     this._sortComponent = new SortComponent();
     this._tripDaysListElement = new TripDaysListComponent().getElement();
     this._noPointsComponent = new NoPointsComponent();
     this._tripDayComponent = new TripDayComponent();
-    this._addEventFormComponent = null;
     this._addEventButtonComponent = null;
+    this._newEventId = 0;
 
     this._onDataChange = this._onDataChange.bind(this);
     this._onViewChange = this._onViewChange.bind(this);
@@ -93,11 +91,8 @@ class TripController {
     this._newEventId = this._pointsModel.getPoints().length + 1;
     const defaultEvent = getDefaultEvent(this._newEventId);
 
-    this._addEventFormComponent = new AddEventFormComponent(defaultEvent);
-    this._container.insertBefore(this._addEventFormComponent.getElement(defaultEvent), this._container.lastElementChild);
-
-    this._addEventFormComponent.setCancelClickHandler(this._onAddFormCancel);
-    this._addEventFormComponent.setSubmitHandler(this._onAddFormSubmit);
+    this._addEventFormController = new PointController(this._container, this._onAddFormSubmit, this._onAddFormCancel);
+    this._addEventFormController.render(defaultEvent, Mode.ADD);
   }
 
   _renderWithSortType() {
@@ -183,17 +178,15 @@ class TripController {
 
   _onAddFormCancel() {
     this._addEventButtonComponent.enable();
-    remove(this._addEventFormComponent);
+    this._addEventFormController.destroy();
     this._pointControllers.forEach((it) => it.enableOpenButton());
   }
 
   _onAddFormSubmit(evt) {
     evt.preventDefault();
-    const newPoint = this._addEventFormComponent.getFormData();
+    const newPoint = this._addEventFormController.getFormData();
     this._pointsModel.addPoint(newPoint);
-    this._addEventButtonComponent.enable();
-    remove(this._addEventFormComponent);
-    this._pointControllers.forEach((it) => it.enableOpenButton());
+    this._onAddFormCancel();
     this._renderWithSortType();
   }
 }
