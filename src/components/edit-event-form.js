@@ -233,6 +233,7 @@ class EditEventForm extends AbstractSmartComponent {
     this._eventForReset = Object.assign({}, event);
 
     this._submitHandler = null;
+    this._deleteHandler = null;
     this._resetHandler = null;
     this._flatpickr = null;
 
@@ -251,6 +252,13 @@ class EditEventForm extends AbstractSmartComponent {
     this.getElement().querySelector(`form`).addEventListener(`submit`, handler);
   }
 
+  setDeleteClickHandler(handler) {
+    if (!this._deleteHandler) {
+      this._deleteHandler = handler;
+    }
+    this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, handler);
+  }
+
   setCloseButtonClickHandler(handler) {
     if (!this._resetHandler) {
       this._resetHandler = handler;
@@ -260,6 +268,7 @@ class EditEventForm extends AbstractSmartComponent {
 
   recoveryListeners() {
     this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
+    this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, this._deleteHandler);
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
     this._subscribeOnEvents();
   }

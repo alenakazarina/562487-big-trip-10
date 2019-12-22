@@ -1,4 +1,5 @@
 import AbstractComponent from './abstract-component';
+import {isSameMonth, formatMonthDay} from '../utils/common';
 
 const createTripInfoMainTemplate = (events) => {
   if (!events.length) {
@@ -14,9 +15,8 @@ const createTripInfoMainTemplate = (events) => {
   const startDate = events[0].startDate;
   const endDate = events[events.length - 1].endDate;
 
-  const isSameMonth = startDate.getMonth() === endDate.getMonth();
-  const startTime = `${startDate.toString().substring(3, 7)} ${startDate.getDate()}`;
-  const endTime = isSameMonth ? `${endDate.getDate()}` : `${endDate.toString().substring(3, 7)} ${endDate.getDate()}`;
+  const startTime = formatMonthDay(startDate);
+  const endTime = isSameMonth(startDate, endDate) ? formatMonthDay(endDate).split(` `)[1] : formatMonthDay(endDate);
 
   const titles = Array.from(cities);
   const titlesTemplate = titles.length <= 2 ?

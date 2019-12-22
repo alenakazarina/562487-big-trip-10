@@ -1,15 +1,44 @@
-import {DEFAULT_DESCRIPTION, ICON_PATHS, ACTIVITY_EVENTS, OFFER_TYPES} from '../const';
+import {DEFAULT_DESCRIPTION, ICON_PATHS, ACTIVITY_EVENTS, OFFER_TYPES, PHOTO_PATH} from '../const';
 import moment from 'moment';
 
+const isSameDay = (a, b) => {
+  return moment(a).isSame(b, `day`) && moment(a).isSame(b, `month`) && moment(a).isSame(b, `year`);
+};
+
+const isSameMonth = (a, b) => {
+  return moment(a).isSame(b, `month`) && moment(a).isSame(b, `year`);
+};
+
+const getUniqueDays = (days) => {
+  let uniqueDays = [];
+  days.forEach((day, i) => {
+    if (i === 0 || uniqueDays.every((it) => isSameDay(it, day) === false)) {
+      uniqueDays.push(day);
+    }
+  });
+  return uniqueDays;
+};
+
+const getDatesDiff = (a, b) => {
+  return moment(a) - moment(b);
+};
+
+const formatMonthDay = (date) => {
+  return moment(date).format(`MMM DD`);
+};
 
 const formatTimeWithSlashes = (date) => {
   return `${moment(date).format(`DD/MM/YY hh:mm`)}`;
 };
 
+const parseDateFromISOString = (date) => {
+  return moment(date).format();
+};
+
 const parseDateWithSlashes = (dateString) => {
   const [date, time] = dateString.split(` `);
   const [day, month, year] = date.split(`/`);
-  return new Date(moment(`${day}-${month}-${year} ${time}`, `DD-MM-YY hh:mm`).format());
+  return new Date(moment(`${day}-${month}-${year} ${time}`, `DD-MM-YY hh:mm`).format()).toISOString();
 };
 
 const formatDatetime = (date) => {
@@ -73,6 +102,10 @@ const generateDescription = () => {
   }
   return description;
 };
+
+const generateEventPhotos = (count) => new Array(count).fill(``)
+  .map(() => Math.round(Math.random() * 1000))
+  .map((number) => PHOTO_PATH.concat(number));
 
 const capitalizeFirstLetter = (str) => {
   return `${str.slice(0, 1).toUpperCase()}${str.slice(1)}`;
@@ -142,7 +175,13 @@ const AVAILABLE_OFFERS = {
 const isSameOffers = (a, b) => a.type === b.type && a.title === b.title && a.price === b.price;
 
 export {
+  isSameDay,
+  isSameMonth,
+  getUniqueDays,
+  getDatesDiff,
+  formatMonthDay,
   formatTimeWithSlashes,
+  parseDateFromISOString,
   parseDateWithSlashes,
   formatDatetime,
   formatFullDatetime,
@@ -155,6 +194,7 @@ export {
   generateDescription,
   getIcon,
   capitalizeFirstLetter,
+  generateEventPhotos,
   generateOffers,
   getEventType,
   getOfferType,

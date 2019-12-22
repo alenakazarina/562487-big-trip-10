@@ -1,11 +1,12 @@
 import {FilterType, SortType} from '../const';
+import {getUniqueDays, parseDateFromISOString, getDatesDiff} from '../utils/common';
 
 const getSortedPoints = (points, sortType) => {
   switch (sortType) {
     case SortType.EVENT:
-      return points.slice().sort((a, b) => (a.startDate - b.startDate));
+      return points.slice().sort((a, b) => getDatesDiff(a.startDate, b.startDate) > 0);
     case SortType.TIME:
-      return points.slice().sort((a, b) => (b.endDate - b.startDate) - (a.endDate - a.startDate));
+      return points.slice().sort((a, b) => getDatesDiff(b.endDate, b.startDate) - getDatesDiff(a.endDate, a.startDate));
     case SortType.PRICE:
       return points.slice().sort((a, b) => b.price - a.price);
   }
@@ -15,11 +16,11 @@ const getSortedPoints = (points, sortType) => {
 const getPointsByFilter = (points, filterType) => {
   switch (filterType) {
     case FilterType.EVERYTHING:
-      return Array.from(points);
+      return points.slice();
     case FilterType.FUTURE:
-      return points.filter((point) => point.startDate > Date.now());
+      return points.filter((point) => getDatesDiff(point.startDate, Date.now()) > 0);
     case FilterType.PAST:
-      return points.filter((point) => point.startDate < Date.now());
+      return points.filter((point) => getDatesDiff(point.startDate, Date.now()) < 0);
   }
   return points;
 };
@@ -46,13 +47,17 @@ class Points {
   }
 
   setPoints(points) {
-    this._points = points.map((point) => Object.assign({}, point, {isFavorite: false})).sort((a, b) => a.startDate - b.startDate);
+    this._points = points
+      .map((point) => Object.assign({}, point, {isFavorite: false}))
+      .map((point) => Object.assign({}, point, {startDate: parseDateFromISOString(point.startDate)}, {endDate: parseDateFromISOString(point.endDate)}))
+      .sort((a, b) => getDatesDiff(a.startDate, b.startDate) > 0);
 
     this._pointsDates = this._getPointsDates(this._points);
   }
 
   addPoint(point) {
-    this._points = [].concat(point, this.points);
+    this._points = [].concat(point, this._points);
+    this._pointsDates = this._getPointsDates(this._points);
     this._callHandlers(this._dataChangeHandlers);
   }
 
@@ -62,8 +67,9 @@ class Points {
       return false;
     }
 
-    this.points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));
-    this._callHandlers(this._dataChangeHandlers);
+    this._points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));
+    this._pointsDates = this._getPointsDates(this._points);
+
     return true;
   }
 
@@ -110,10 +116,8 @@ class Points {
   }
 
   _getPointsDates(points) {
-    return points
-    .map((point) => point.startDate)
-    .filter((date, i, arr) => arr.slice(i + 1, arr.length).every((it) => it !== date))
-    .sort((a, b) => a - b);
+    const startDates = points.map((point) => point.startDate).sort((a, b) => getDatesDiff(a, b));
+    return getUniqueDays(startDates);
   }
 }
 

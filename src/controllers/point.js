@@ -2,11 +2,12 @@ import {render, replace} from '../utils/render';
 import EventComponent from '../components/event';
 import EditEventComponent from '../components/edit-event-form';
 import {Mode} from '../const';
+import {remove} from '../utils/render';
 
 class PointController {
   constructor(container, onDataChange, onViewChange) {
     this._event = null;
-    this._mode = Mode.DEFAULT;
+    this._mode = Mode.VIEW;
 
     this._container = container;
     this._eventComponent = null;
@@ -40,6 +41,10 @@ class PointController {
       this.setDefaultView();
     });
 
+    this._editEventComponent.setDeleteClickHandler(() => {
+      this._onDataChange(this, this._event, null);
+    });
+
     if (oldEventComponent && oldEditEventComponent) {
       replace(this._eventComponent, oldEventComponent);
       replace(this._editEventComponent, oldEditEventComponent);
@@ -54,6 +59,24 @@ class PointController {
     }
   }
 
+  disableOpenButton() {
+    this._eventComponent.getElement().querySelector(`.event__rollup-btn`).disabled = true;
+  }
+
+  enableOpenButton() {
+    this._container.querySelector(`.event__rollup-btn`).disabled = false;
+  }
+
+  getContainer() {
+    return this._container;
+  }
+
+  destroy() {
+    remove(this._editEventComponent);
+    remove(this._eventComponent);
+    document.removeEventListener(`keydown`, this._onEscKeyDown);
+  }
+
   _onEscKeyPress(evt) {
     if (evt.key === `Escape` || evt.key === `Esc`) {
       this._showEvent();
@@ -64,7 +87,7 @@ class PointController {
     this._editEventComponent.reset();
     this._replaceFormToEvent();
     document.removeEventListener(`keydown`, this._onEscKeyPress);
-    this._mode = Mode.DEFAULT;
+    this._mode = Mode.VIEW;
   }
 
   _showEditForm() {
