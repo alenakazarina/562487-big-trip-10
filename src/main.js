@@ -1,32 +1,42 @@
 import TripInfoMainComponent from './components/trip-info-main';
 import TripInfoCostComponent from './components/trip-info-cost';
 import MenuComponent from './components/menu';
-import FiltersComponent from './components/filters';
+import AddEventButtonComponent from './components/add-event-button';
 import TripController from './controllers/trip';
+import FiltersController from './controllers/filters';
+import PointsModel from './models/points';
 import {render} from './utils/render';
 import {generateEvents} from './mocks/events';
-import {generateFilters} from './mocks/filters';
+
 
 const EVENTS_COUNT = 22;
 const DAYS_COUNT = 4;
 
-const sortByStartDate = (arr) => arr.map((it) => it).sort((a, b) => a.startDate > b.startDate ? 1 : -1);
-
 const events = generateEvents(EVENTS_COUNT, DAYS_COUNT);
-const filters = generateFilters(events);
 
-const tripInfoElement = document.querySelector(`.trip-info`);
-const tripControlsElement = tripInfoElement.nextElementSibling;
+const pointsModel = new PointsModel();
+pointsModel.setPoints(events);
+const points = pointsModel.getPoints();
 
+const tripMainElement = document.querySelector(`.trip-main`);
 
-const sortedEvents = events.length ? sortByStartDate(events) : events;
+const tripInfoElement = tripMainElement.children[0];
+const tripControlsElement = tripMainElement.children[1];
 
-render(tripInfoElement, new TripInfoMainComponent(sortedEvents).getElement());
-render(tripInfoElement, new TripInfoCostComponent(sortedEvents).getElement());
+render(tripInfoElement, new TripInfoMainComponent(points).getElement());
+render(tripInfoElement, new TripInfoCostComponent(points).getElement());
 
-render(tripControlsElement, new MenuComponent().getElement());
-render(tripControlsElement, new FiltersComponent(filters).getElement());
+render(tripMainElement.children[1], new MenuComponent().getElement());
 
+const addEventButtonComponent = new AddEventButtonComponent();
+render(tripMainElement, addEventButtonComponent.getElement());
 
-const tripController = new TripController(document.querySelector(`.trip-events`));
-tripController.render(sortedEvents);
+const filtersController = new FiltersController(tripControlsElement, pointsModel);
+filtersController.render();
+
+const tripController = new TripController(document.querySelector(`.trip-events`), pointsModel);
+tripController.render();
+
+addEventButtonComponent.setClickHandler(() => {
+  tripController.renderAddEventForm(addEventButtonComponent);
+});

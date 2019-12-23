@@ -1,18 +1,20 @@
 import AbstractComponent from './abstract-component';
+import {FilterType} from '../const';
 
-const createFilter = (filter) => {
-  const isChecked = filter.name === `EveryThing` ? `checked` : ``;
+const createFilter = (filter, isActive) => {
+  const isChecked = isActive ? `checked` : ``;
 
   return `
     <div class="trip-filters__filter">
-      <input id="filter-${filter.name}" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="${filter.name}" ${isChecked}>
-      <label class="trip-filters__filter-label" for="filter-${filter.name}">${filter.name}</label>
+      <input id="filter-${filter}" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="${filter}" ${isChecked}>
+      <label class="trip-filters__filter-label" for="filter-${filter}">${filter}</label>
     </div>
   `;
 };
 
-const createFiltersTemplate = (filters) => {
-  const filtersTemplate = filters.map((it) => createFilter(it)).join(`\n`);
+const createFiltersTemplate = (activeFilter) => {
+  const filtersTemplate = Object.values(FilterType)
+  .map((it) => createFilter(it, it === activeFilter)).join(`\n`);
 
   return `
     <form class="trip-filters" action="#" method="get">
@@ -23,13 +25,19 @@ const createFiltersTemplate = (filters) => {
 };
 
 class Filters extends AbstractComponent {
-  constructor(filters) {
+  constructor(activeFilter) {
     super();
-    this._filters = filters;
+    this._activeFilter = activeFilter;
   }
 
   getTemplate() {
-    return createFiltersTemplate(this._filters);
+    return createFiltersTemplate(this._activeFilter);
+  }
+
+  setFiltersChangeHandler(handler) {
+    document.querySelector(`.trip-filters`).addEventListener(`change`, (evt) => {
+      handler(evt.target.value);
+    });
   }
 }
 

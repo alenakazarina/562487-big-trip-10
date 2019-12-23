@@ -1,18 +1,12 @@
 import {
-  PHOTO_PATH,
   DEFAULT_CITIES,
   ACTIVITY_EVENTS,
   TRANSFER_EVENTS,
-  MAX_OFFERS_COUNT
+  MAX_OFFERS_COUNT,
+  PHOTOS_COUNT
 } from '../const';
 
-import {getIcon, generateDescription, getRandomIntegerNumber, generateOffers, getRandomArrayItem} from '../utils/common';
-
-const PHOTOS_COUNT = 5;
-
-const generateEventPhotos = (count) => new Array(count).fill(``)
-  .map(() => Math.round(Math.random() * 1000))
-  .map((number) => PHOTO_PATH.concat(number));
+import {getIcon, generateDescription, generateEventPhotos, getRandomIntegerNumber, generateOffers, getRandomArrayItem} from '../utils/common';
 
 const generateDatesArray = (daysCount) => {
   return new Array(daysCount)
@@ -68,8 +62,8 @@ const generateEvent = (eventID, dates) => {
     type: eventType,
     name: eventName,
     icon: eventIcon,
-    startDate: eventStartDate,
-    endDate: eventEndDate,
+    startDate: eventStartDate.toISOString(),
+    endDate: eventEndDate.toISOString(),
     destination: getRandomArrayItem(DEFAULT_CITIES),
     price: getRandomIntegerNumber(1, 10000),
     description: generateDescription(),
@@ -83,7 +77,7 @@ const generateEvents = (eventsCount, daysCount) => {
 
   return new Array(eventsCount)
     .fill(``)
-    .map((it, id) => generateEvent(id, dates));
+    .map((it, id) => generateEvent(id + 1, dates));
 };
 
 export {generateEvents};
