@@ -64,7 +64,7 @@ class Points {
   removePoint(id) {
     const index = this._getPointById(id);
     if (index === -1) {
-      return false;
+      throw Error(`no point with this id in points array`);
     }
 
     this._points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));
@@ -95,15 +95,15 @@ class Points {
     }
   }
 
-  setDataChangeHandlers(handler) {
+  addDataChangeHandler(handler) {
     this._dataChangeHandlers.push(handler);
   }
 
-  setFilterChangeHandlers(handler) {
+  addFilterChangeHandler(handler) {
     this._filterChangeHandlers.push(handler);
   }
 
-  setSortTypeChangeHandlers(handler) {
+  addSortTypeChangeHandler(handler) {
     this._sortTypeChangeHandlers.push(handler);
   }
 

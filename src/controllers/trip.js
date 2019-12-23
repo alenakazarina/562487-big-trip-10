@@ -62,9 +62,9 @@ class TripController {
     this._renderWithSortType = this._renderWithSortType.bind(this);
 
     this._sortComponent.setSortTypeChangeHandler(this._onSortTypeChange);
-    this._pointsModel.setSortTypeChangeHandlers(this._onSortTypeChange);
-    this._pointsModel.setFilterChangeHandlers(this._renderWithSortType);
-    this._pointsModel.setDataChangeHandlers(this._renderWithSortType);
+    this._pointsModel.addSortTypeChangeHandler(this._onSortTypeChange);
+    this._pointsModel.addFilterChangeHandler(this._renderWithSortType);
+    this._pointsModel.addDataChangeHandler(this._renderWithSortType);
   }
 
   render() {

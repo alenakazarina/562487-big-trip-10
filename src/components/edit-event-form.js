@@ -1,15 +1,9 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import {
   formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, generateEventPhotos, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
-import {ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES, PHOTOS_COUNT, Mode} from '../const';
+import {HIDE_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES, PHOTOS_COUNT, Mode} from '../const';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-
-const HIDE_CLASS = `visually-hidden`;
-const DetailsMode = {
-  OPEN: `open`,
-  CLOSED: `closed`
-};
 
 const createFavoriteButtonTemplate = (id, isFavorite) => {
   const isChecked = isFavorite ? `checked` : ``;
@@ -209,20 +203,28 @@ const createFormHeaderTemplate = (event, mode) => {
   `;
 };
 
-const createEditEventTemplate = (event, mode) => {
-  const headerInner = createFormHeaderTemplate(event, mode);
+const createDetailsTemplate = (event, isDetails) => {
   const offers = createOffersSection(event);
   const destination = createDestinationSection(event);
+  const isHidden = isDetails ? `` : HIDE_CLASS;
+  return `
+    <section class="event__details ${isHidden}">
+      ${offers}
+      ${destination}
+    </section>
+  `;
+};
+
+const createEditEventTemplate = (event, mode, isDetails) => {
+  const headerInner = createFormHeaderTemplate(event, mode);
+  const detailsSection = createDetailsTemplate(event, isDetails);
 
   return mode === Mode.ADD ? `
     <form class="trip-events__item  event  event--edit" action="#" method="post">
       <header class="event__header">
         ${headerInner}
       </header>
-      <section class="event__details visually-hidden">
-        ${offers}
-        ${destination}
-      </section>
+      ${detailsSection}
     </form>
   ` : `
     <li class="trip-events__item">
@@ -233,10 +235,7 @@ const createEditEventTemplate = (event, mode) => {
             <span class="visually-hidden">Open event</span>
           </button>
         </header>
-        <section class="event__details">
-          ${offers}
-          ${destination}
-        </section>
+        ${detailsSection}
       </form>
     </li>
   `;
@@ -248,7 +247,7 @@ class EditEventForm extends AbstractSmartComponent {
     this._event = event;
     this._eventForReset = Object.assign({}, event);
     this._mode = mode;
-    this._detailsMode = DetailsMode.CLOSED;
+    this._details = mode === Mode.EDIT ? true : false;
 
     this._submitHandler = null;
     this._deleteHandler = null;
@@ -260,13 +259,11 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event, this._mode);
+    return createEditEventTemplate(this._event, this._mode, this._details);
   }
 
   setSubmitHandler(handler) {
-    if (!this._submitHandler) {
-      this._submitHandler = handler;
-    }
+    this._submitHandler = handler;
     if (this._mode === Mode.ADD) {
       this.getElement().addEventListener(`submit`, this._submitHandler);
     } else {
@@ -275,21 +272,17 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   setDeleteClickHandler(handler) {
-    if (!this._deleteHandler) {
-      this._deleteHandler = handler;
-    }
+    this._deleteHandler = handler;
     this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, this._deleteHandler);
   }
 
   setCloseButtonClickHandler(handler) {
-    if (!this._resetHandler) {
-      this._resetHandler = handler;
-    }
+    this._resetHandler = handler;
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
   }
 
   recoveryListeners() {
-    if (this._mode === Mode.Edit) {
+    if (this._mode === Mode.EDIT) {
       this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
     }
     if (this._mode === Mode.ADD) {
@@ -304,9 +297,6 @@ class EditEventForm extends AbstractSmartComponent {
 
   rerender() {
     super.rerender();
-    if (this._detailsMode === DetailsMode.OPEN) {
-      this._showDetails();
-    }
     this._applyFlatpickr();
   }
 
@@ -328,7 +318,7 @@ class EditEventForm extends AbstractSmartComponent {
       id: this._event.id,
       type: isActivityEvent ? `activity` : `transfer`,
       name: eventName,
-      icon: `${eventName}.png`,
+      icon: `${eventName.toLowerCase()}.png`,
       startDate: parseDateWithSlashes(formData.get(`event-start-time`)),
       endDate: parseDateWithSlashes(formData.get(`event-end-time`)),
       destination: formData.get(`event-destination`),
@@ -340,10 +330,6 @@ class EditEventForm extends AbstractSmartComponent {
     };
 
     return newPoint;
-  }
-
-  _showDetails() {
-    this.getElement().querySelector(`.event__details`).classList.remove(HIDE_CLASS);
   }
 
   _setValidation() {
@@ -360,7 +346,7 @@ class EditEventForm extends AbstractSmartComponent {
   _subscribeOnEvents() {
     const element = this.getElement();
 
-    if (this._mode !== Mode.ADD) {
+    if (this._mode === Mode.EDIT) {
       element.querySelector(`.event__favorite-checkbox`).addEventListener(`change`, () => {
         this._event = Object.assign({}, this._event, {isFavorite: !this._event.isFavorite});
       });
@@ -380,7 +366,7 @@ class EditEventForm extends AbstractSmartComponent {
       const isValidDestination = DEFAULT_CITIES.some((it) => it === inputValue);
       if (!isValidDestination) {
         this._event.destination = ``;
-        this._detailsMode = DetailsMode.CLOSED;
+        this._details = false;
       } else {
         this._event = Object.assign({}, this._event,
             {destination: evt.target.value.trim()},
@@ -391,7 +377,7 @@ class EditEventForm extends AbstractSmartComponent {
               {photos: generateEventPhotos(PHOTOS_COUNT)}
           );
         }
-        this._detailsMode = DetailsMode.OPEN;
+        this._details = true;
       }
       this.rerender();
     });
