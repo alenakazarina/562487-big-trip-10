@@ -64,7 +64,7 @@ class Points {
   removePoint(id) {
     const index = this._getPointById(id);
     if (index === -1) {
-      throw Error(`no point with this id in points array`);
+      throw Error(`no point with id ${id} in points array`);
     }
 
     this._points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));

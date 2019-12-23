@@ -247,7 +247,7 @@ class EditEventForm extends AbstractSmartComponent {
     this._event = event;
     this._eventForReset = Object.assign({}, event);
     this._mode = mode;
-    this._details = mode === Mode.EDIT ? true : false;
+    this._details = mode === Mode.EDIT;
 
     this._submitHandler = null;
     this._deleteHandler = null;
