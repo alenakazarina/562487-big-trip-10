@@ -1,7 +1,7 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import {TRANSFER_EVENTS, ACTIVITY_EVENTS, Preposition} from '../const';
+import {TRANSFER_EVENTS, ACTIVITY_EVENTS} from '../const';
 import {getDatesDiff} from '../utils/common';
 
 const EmojiValue = {
@@ -30,22 +30,23 @@ const calculateSum = (items) => items.reduce((acc, it) => {
 
 const convertMsToHours = (time) => Math.floor(time / (1000 * 3600));
 
-const calculateEventCosts = (points) => {
-  return points.map((point) => point.price + calculateSum(point.offers.map((offer) => offer.price)));
+const getMoneyChartData = (points) => {
+  let costs = [];
+  const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
+  eventsNames.forEach((it, i) => {
+    costs[i] = calculateSum(points.filter((point) => point.name === it).map((point) => point.price));
+  });
+  return [eventsNames, costs];
 };
 
 const renderMoneyChart = (moneyCtx, points) => {
-  const costs = calculateEventCosts(points);
-  const eventsNames = points.map((it) => {
-    const emoji = EmojiValue[it.name.split(`-`)[0].toUpperCase()];
-    return `${emoji} ${Preposition[it.type]} ${it.destination}`.toUpperCase();
-  });
+  const [eventsNames, costs] = getMoneyChartData(points);
 
   return new Chart(moneyCtx, {
     plugins: [ChartDataLabels],
     type: `horizontalBar`,
     data: {
-      labels: eventsNames,
+      labels: getNamesWithEmoji(eventsNames),
       datasets: [
         {
           data: costs,
@@ -92,25 +93,33 @@ const renderMoneyChart = (moneyCtx, points) => {
       },
       legend: {
         display: false
+      },
+      tooltips: {
+        enabled: false
       }
     }
   });
 };
 
-const renderTransportChart = (transportCtx, points) => {
-  let events = [];
+const getTransportChartData = (points) => {
+  let transportEvents = [];
   let eventsNames = [].concat(TRANSFER_EVENTS);
 
   eventsNames.forEach((it, i) => {
-    events[i] = points.filter((point) => point.type === `transfer` && point.name === it);
+    transportEvents[i] = points.filter((point) => point.type === `transfer` && point.name === it);
   });
 
-  events = events.filter((it, i) => {
+  const eventsCounts = transportEvents.filter((it, i) => {
     if (it.length === 0) {
       eventsNames = [].concat(eventsNames.slice(0, i), eventsNames.slice(i + 1));
     }
     return it.length > 0;
   }).map((it) => it.length);
+  return [eventsNames, eventsCounts];
+};
+
+const renderTransportChart = (transportCtx, points) => {
+  const [eventsNames, eventsCounts] = getTransportChartData(points);
 
   return new Chart(transportCtx, {
     plugins: [ChartDataLabels],
@@ -119,7 +128,7 @@ const renderTransportChart = (transportCtx, points) => {
       labels: getNamesWithEmoji(eventsNames),
       datasets: [
         {
-          data: events,
+          data: eventsCounts,
           backgroundColor: `white`
         }
       ]
@@ -165,22 +174,27 @@ const renderTransportChart = (transportCtx, points) => {
       },
       legend: {
         display: false
+      },
+      tooltips: {
+        enabled: false
       }
     }
   });
 };
 
-const renderTimeChart = (timeCtx, points) => {
+const getTimeChartData = (points) => {
   let eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
   let durations = [];
-
   eventsNames.forEach((it, i) => {
     durations[i] = points.filter((point) => point.name === it)
       .map((point) => getDatesDiff(point.endDate, point.startDate));
   });
-
   durations = durations.map((it) => convertMsToHours(calculateSum(it)));
+  return [eventsNames, durations];
+};
 
+const renderTimeChart = (timeCtx, points) => {
+  const [eventsNames, durations] = getTimeChartData(points);
   return new Chart(timeCtx, {
     plugins: [ChartDataLabels],
     type: `horizontalBar`,
@@ -231,32 +245,46 @@ const renderTimeChart = (timeCtx, points) => {
       title: {
         display: true,
         position: `left`,
-        text: `TIME SPENT`,
+        text: `TIME SPEND`,
         fontSize: 24,
         fontColor: `#000000`
       },
       legend: {
         display: false
+      },
+      tooltips: {
+        enabled: false
       }
     }
   });
 };
 
-const createStatisticsTemplate = () => {
+const createStatisticsTemplate = (points) => {
+  const [labelsForMoneyChart, moneyChartData] = getMoneyChartData(points);
+  const [labelsForTransportChart, transportChartData] = getTransportChartData(points);
+  const [labelsForTimeChart, timeChartData] = getTimeChartData(points);
+
+  const ariaLabelForMoneyChart = `Bar Chart Values in Euros. `.concat(labelsForMoneyChart.map((it, i) => `${it}: ${moneyChartData[i]}`).join(`, `));
+  const ariaLabelForTransportChart = `Bar Chart Values as a number of times. `.concat(labelsForTransportChart.map((it, i) => `${it}: ${transportChartData[i]}`).join(`, `));
+  const ariaLabelForTimeChart = `Bar Chart Values in hours. `.concat(labelsForTimeChart.map((it, i) => `${it}: ${timeChartData[i]}`).join(`, `));
+
   return `
     <section class="statistics">
       <h2 class="visually-hidden">Trip statistics</h2>
 
       <div class="statistics__item statistics__item--money">
-        <canvas class="statistics__chart  statistics__chart--money" width="900"></canvas>
+        <h3 class="visually-hidden">Money chart</h3>
+        <canvas class="statistics__chart  statistics__chart--money" width="900" role="img" aria-label="${ariaLabelForMoneyChart}"></canvas>
       </div>
 
       <div class="statistics__item statistics__item--transport">
-        <canvas class="statistics__chart  statistics__chart--transport" width="900"></canvas>
+        <h3 class="visually-hidden">Transport chart</h3>
+        <canvas class="statistics__chart  statistics__chart--transport" width="900" role="img" aria-label="${ariaLabelForTransportChart}"></canvas>
       </div>
 
       <div class="statistics__item statistics__item--time-spend">
-        <canvas class="statistics__chart  statistics__chart--time" width="900"></canvas>
+        <h3 class="visually-hidden">Time spend chart</h3>
+        <canvas class="statistics__chart  statistics__chart--time" width="900" role="img" aria-label="${ariaLabelForTimeChart}"></canvas>
       </div>
     </section>
   `;
