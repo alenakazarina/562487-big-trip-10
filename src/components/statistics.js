@@ -1,7 +1,8 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import {Preposition} from '../const';
+import {TRANSFER_EVENTS, ACTIVITY_EVENTS, Preposition} from '../const';
+import {getDatesDiff} from '../utils/common';
 
 const EmojiValue = {
   TAXI: `🚕`,
@@ -16,9 +17,18 @@ const EmojiValue = {
   RESTAURANT: `🍴`
 };
 
+const getNamesWithEmoji = (eventsNames) => {
+  return eventsNames.map((it) => {
+    const emoji = EmojiValue[it.split(`-`)[0].toUpperCase()];
+    return `${emoji} ${it.toUpperCase()}`;
+  });
+};
+
 const calculateSum = (items) => items.reduce((acc, it) => {
   return it + acc;
 }, 0);
+
+const convertMsToHours = (time) => Math.floor(time / (1000 * 3600));
 
 const calculateEventCosts = (points) => {
   return points.map((point) => point.price + calculateSum(point.offers.map((offer) => offer.price)));
@@ -26,21 +36,23 @@ const calculateEventCosts = (points) => {
 
 const renderMoneyChart = (moneyCtx, points) => {
   const costs = calculateEventCosts(points);
-  const events = points.map((it) => {
+  const eventsNames = points.map((it) => {
     const emoji = EmojiValue[it.name.split(`-`)[0].toUpperCase()];
-    const preposition = Preposition[it.type];
-    return `${emoji} ${it.name} ${preposition} ${it.destination}`;
+    return `${emoji} ${Preposition[it.type]} ${it.destination}`.toUpperCase();
   });
 
   return new Chart(moneyCtx, {
     plugins: [ChartDataLabels],
     type: `horizontalBar`,
     data: {
-      labels: events,
+      labels: eventsNames,
       datasets: [
         {
-          data: costs
-        }]
+          data: costs,
+          minBarLength: 40,
+          backgroundColor: `white`
+        }
+      ]
     },
     options: {
       plugins: {
@@ -49,28 +61,182 @@ const renderMoneyChart = (moneyCtx, points) => {
           clamp: true,
           anchor: `end`,
           align: `left`,
-          formatter: (value, ctx) => {
-            return `€ ${ctx.chart.data.datasets[0].data[ctx.dataIndex]}`;
-          }
+          font: {
+            size: 14
+          },
+          textAlign: `center`,
+          padding: 2,
+          formatter: (value) => `€ ${value}`
         }
+      },
+      scales: {
+        xAxes: [{
+          display: false
+        }],
+        yAxes: [{
+          gridLines: {
+            display: false,
+            color: `red`
+          },
+          ticks: {
+            fontSize: 16
+          }
+        }],
       },
       title: {
         display: true,
         position: `left`,
         text: `MONEY`,
-        fontSize: 16,
+        fontSize: 24,
         fontColor: `#000000`
       },
       legend: {
-        display: false,
-        position: `left`,
-        labels: {
-          boxWidth: 15,
-          padding: 25,
-          fontStyle: 500,
-          fontColor: `#000000`,
-          fontSize: 13
+        display: false
+      }
+    }
+  });
+};
+
+const renderTransportChart = (transportCtx, points) => {
+  let events = [];
+  let eventsNames = [].concat(TRANSFER_EVENTS);
+
+  eventsNames.forEach((it, i) => {
+    events[i] = points.filter((point) => point.type === `transfer` && point.name === it);
+  });
+
+  events = events.filter((it, i) => {
+    if (it.length === 0) {
+      eventsNames = [].concat(eventsNames.slice(0, i), eventsNames.slice(i + 1));
+    }
+    return it.length > 0;
+  }).map((it) => it.length);
+
+  return new Chart(transportCtx, {
+    plugins: [ChartDataLabels],
+    type: `horizontalBar`,
+    data: {
+      labels: getNamesWithEmoji(eventsNames),
+      datasets: [
+        {
+          data: events,
+          backgroundColor: `white`
         }
+      ]
+    },
+    options: {
+      plugins: {
+        datalabels: {
+          color: `black`,
+          clamp: true,
+          anchor: `end`,
+          align: `left`,
+          font: {
+            size: 14
+          },
+          textAlign: `center`,
+          padding: 2,
+          formatter: (value) => `${value}x`
+        }
+      },
+      scales: {
+        xAxes: [{
+          display: false,
+          ticks: {
+            suggestedMin: 0
+          }
+        }],
+        yAxes: [{
+          gridLines: {
+            display: false,
+            color: `red`
+          },
+          ticks: {
+            fontSize: 16
+          }
+        }],
+      },
+      title: {
+        display: true,
+        position: `left`,
+        text: `TRANSPORT`,
+        fontSize: 24,
+        fontColor: `#000000`
+      },
+      legend: {
+        display: false
+      }
+    }
+  });
+};
+
+const renderTimeChart = (timeCtx, points) => {
+  let eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
+  let durations = [];
+
+  eventsNames.forEach((it, i) => {
+    durations[i] = points.filter((point) => point.name === it)
+      .map((point) => getDatesDiff(point.endDate, point.startDate));
+  });
+
+  durations = durations.map((it) => convertMsToHours(calculateSum(it)));
+
+  return new Chart(timeCtx, {
+    plugins: [ChartDataLabels],
+    type: `horizontalBar`,
+    data: {
+      labels: getNamesWithEmoji(eventsNames),
+      datasets: [
+        {
+          data: durations,
+          minBarLength: 40,
+          backgroundColor: `white`
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        datalabels: {
+          color: `black`,
+          clamp: true,
+          anchor: `end`,
+          align: `left`,
+          font: {
+            size: 14
+          },
+          textAlign: `center`,
+          padding: 2,
+          formatter: (value) => {
+            return value === 0 ? `< 1H` : `${value}H`;
+          }
+        }
+      },
+      scales: {
+        xAxes: [{
+          display: false,
+          ticks: {
+            suggestedMin: 0
+          }
+        }],
+        yAxes: [{
+          gridLines: {
+            display: false,
+            color: `red`
+          },
+          ticks: {
+            fontSize: 16
+          }
+        }],
+      },
+      title: {
+        display: true,
+        position: `left`,
+        text: `TIME SPENT`,
+        fontSize: 24,
+        fontColor: `#000000`
+      },
+      legend: {
+        display: false
       }
     }
   });
@@ -99,6 +265,7 @@ const createStatisticsTemplate = () => {
 class Statistics extends AbstractSmartComponent {
   constructor(pointsModel) {
     super();
+    this._pointsModel = pointsModel;
     this._points = pointsModel.getPoints();
 
     this._moneyChart = null;
@@ -115,7 +282,7 @@ class Statistics extends AbstractSmartComponent {
   show() {
     super.show();
 
-    this.rerender(this._points);
+    this.rerender(this._pointsModel.getPoints());
   }
 
   recoveryListeners() {}
@@ -129,10 +296,14 @@ class Statistics extends AbstractSmartComponent {
   _renderCharts() {
     const element = this.getElement();
     const moneyCtx = element.querySelector(`.statistics__chart--money`);
+    const transportCtx = element.querySelector(`.statistics__chart--transport`);
+    const timeCtx = element.querySelector(`.statistics__chart--time`);
 
     this._resetCharts();
 
     this._moneyChart = renderMoneyChart(moneyCtx, this._points);
+    this._transportChart = renderTransportChart(transportCtx, this._points);
+    this._timeChart = renderTimeChart(timeCtx, this._points);
   }
 
   _resetCharts() {

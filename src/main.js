@@ -10,7 +10,6 @@ import {render} from './utils/render';
 import {generateEvents} from './mocks/events';
 import {MenuTab} from './const';
 
-
 const EVENTS_COUNT = 22;
 const DAYS_COUNT = 4;
 
@@ -46,6 +45,7 @@ addEventButtonComponent.setClickHandler(() => {
 
 const statisticsComponent = new StatisticsComponent(pointsModel);
 render(document.querySelector(`.trip-events`).parentElement, statisticsComponent.getElement());
+statisticsComponent.hide();
 
 menuComponent.setClickHandler((evt) => {
   menuComponent.setActiveTab(evt.target);
