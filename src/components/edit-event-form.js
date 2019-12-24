@@ -1,7 +1,7 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import {
   formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, generateEventPhotos, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
-import {HIDE_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES, PHOTOS_COUNT, Mode} from '../const';
+import {HIDE_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES, PHOTOS_COUNT, Mode, Preposition} from '../const';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
@@ -144,7 +144,7 @@ const createEventTypeListSection = (event) => {
 const createFormHeaderTemplate = (event, mode) => {
   const {id, type, name, price, destination, icon, isFavorite} = event;
 
-  const preposition = (type === `activity`) ? `at` : `to`;
+  const preposition = Preposition[type];
   const eventName = capitalizeFirstLetter(name);
 
   const startDate = formatTimeWithSlashes(event.startDate);
