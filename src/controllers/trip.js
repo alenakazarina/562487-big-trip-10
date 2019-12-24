@@ -7,6 +7,8 @@ import {render} from '../utils/render';
 import {isSameDay} from '../utils/common';
 import {SortType, Mode} from '../const';
 
+const HIDE_CLASS = `trip-events--hidden`;
+
 const getDefaultEvent = (newEventId) => {
   return ({
     id: newEventId,
@@ -93,6 +95,14 @@ class TripController {
 
     this._addEventFormController = new PointController(this._container, this._onAddFormSubmit, this._onAddFormCancel);
     this._addEventFormController.render(defaultEvent, Mode.ADD);
+  }
+
+  show() {
+    this._container.classList.remove(HIDE_CLASS);
+  }
+
+  hide() {
+    this._container.classList.add(HIDE_CLASS);
   }
 
   _renderWithSortType() {

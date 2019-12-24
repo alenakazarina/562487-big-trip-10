@@ -2,12 +2,13 @@ import TripInfoMainComponent from './components/trip-info-main';
 import TripInfoCostComponent from './components/trip-info-cost';
 import MenuComponent from './components/menu';
 import AddEventButtonComponent from './components/add-event-button';
+import StatisticsComponent from './components/statistics';
 import TripController from './controllers/trip';
 import FiltersController from './controllers/filters';
 import PointsModel from './models/points';
 import {render} from './utils/render';
 import {generateEvents} from './mocks/events';
-
+import {MenuTab} from './const';
 
 const EVENTS_COUNT = 22;
 const DAYS_COUNT = 4;
@@ -26,7 +27,8 @@ const tripControlsElement = tripMainElement.children[1];
 render(tripInfoElement, new TripInfoMainComponent(points).getElement());
 render(tripInfoElement, new TripInfoCostComponent(points).getElement());
 
-render(tripMainElement.children[1], new MenuComponent().getElement());
+const menuComponent = new MenuComponent();
+render(tripMainElement.children[1], menuComponent.getElement());
 
 const addEventButtonComponent = new AddEventButtonComponent();
 render(tripMainElement, addEventButtonComponent.getElement());
@@ -40,3 +42,19 @@ tripController.render();
 addEventButtonComponent.setClickHandler(() => {
   tripController.renderAddEventForm(addEventButtonComponent);
 });
+
+const statisticsComponent = new StatisticsComponent(pointsModel);
+render(document.querySelector(`.trip-events`).parentElement, statisticsComponent.getElement());
+statisticsComponent.hide();
+
+menuComponent.setClickHandler((evt) => {
+  menuComponent.setActiveTab(evt.target);
+  if (evt.target.value === MenuTab.TABLE) {
+    tripController.show();
+    statisticsComponent.hide();
+  } else {
+    tripController.hide();
+    statisticsComponent.show();
+  }
+});
+

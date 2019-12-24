@@ -209,6 +209,7 @@ main {
 
 .trip-tabs__btn {
   display: block;
+  padding: 0;
   font-weight: 500;
   font-size: 21px;
   line-height: 25px;
@@ -218,6 +219,8 @@ main {
       -ms-user-select: none;
           user-select: none;
   color: inherit;
+  background-color: transparent;
+  border: none;
   opacity: 0.8;
   -webkit-transition: opacity 0.2s;
   transition: opacity 0.2s; }

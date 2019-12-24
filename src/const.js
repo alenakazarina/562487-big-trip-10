@@ -67,6 +67,16 @@ const Mode = {
   ADD: `add`
 };
 
+const Preposition = {
+  activity: `at`,
+  transfer: `to`
+};
+
+const MenuTab = {
+  TABLE: `Table`,
+  STATS: `Stats`
+};
+
 export {
   HIDE_CLASS,
   PHOTO_PATH,
@@ -81,6 +91,8 @@ export {
   MAX_OFFERS_COUNT_TO_SHOW,
   SortType,
   FilterType,
-  Mode
+  Mode,
+  Preposition,
+  MenuTab
 };
 
