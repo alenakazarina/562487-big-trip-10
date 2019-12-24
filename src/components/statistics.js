@@ -34,7 +34,7 @@ const getMoneyChartData = (points) => {
   let costs = [];
   const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
   eventsNames.forEach((it, i) => {
-    costs[i] = calculateSum(points.filter((point) => point.name === it).map((point) => point.price));
+    costs[i] = calculateSum(points.filter((point) => point.name === it).map((point) => +point.price));
   });
   return [eventsNames, costs];
 };
