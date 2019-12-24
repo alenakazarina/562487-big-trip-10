@@ -240,7 +240,7 @@ const renderTimeChart = (timeCtx, points) => {
       title: {
         display: true,
         position: `left`,
-        text: `TIME SPEND`,
+        text: `TIME SPENT`,
         fontSize: 24,
         fontColor: `#000000`
       },
@@ -277,8 +277,8 @@ const createStatisticsTemplate = (points) => {
         <canvas class="statistics__chart  statistics__chart--transport" width="900" role="img" aria-label="${ariaLabelForTransportChart}"></canvas>
       </div>
 
-      <div class="statistics__item statistics__item--time-spend">
-        <h3 class="visually-hidden">Time spend chart</h3>
+      <div class="statistics__item statistics__item--time-spent">
+        <h3 class="visually-hidden">Time spent chart</h3>
         <canvas class="statistics__chart  statistics__chart--time" width="900" role="img" aria-label="${ariaLabelForTimeChart}"></canvas>
       </div>
     </section>
