@@ -103,19 +103,14 @@ const renderMoneyChart = (moneyCtx, points) => {
 
 const getTransportChartData = (points) => {
   let transportEvents = [];
-  let eventsNames = [].concat(TRANSFER_EVENTS);
+  let eventsNames = [];
 
-  eventsNames.forEach((it, i) => {
+  TRANSFER_EVENTS.forEach((it, i) => {
     transportEvents[i] = points.filter((point) => point.type === `transfer` && point.name === it);
+    eventsNames[i] = transportEvents[i].length ? it : ``;
   });
-
-  const eventsCounts = transportEvents.filter((it, i) => {
-    if (it.length === 0) {
-      eventsNames = [].concat(eventsNames.slice(0, i), eventsNames.slice(i + 1));
-    }
-    return it.length > 0;
-  }).map((it) => it.length);
-  return [eventsNames, eventsCounts];
+  const eventsCounts = transportEvents.filter((it) => it.length > 0).map((it) => it.length);
+  return [eventsNames.filter((it) => it !== ``), eventsCounts];
 };
 
 const renderTransportChart = (transportCtx, points) => {
