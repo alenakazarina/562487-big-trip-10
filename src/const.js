@@ -14,19 +14,19 @@ const DEFAULT_CITIES = [
 ];
 
 const TRANSFER_EVENTS = [
-  `Taxi`,
-  `Bus`,
-  `Train`,
-  `Ship`,
-  `Transport`,
-  `Drive`,
-  `Flight`
+  `taxi`,
+  `bus`,
+  `train`,
+  `ship`,
+  `transport`,
+  `drive`,
+  `flight`
 ];
 
 const ACTIVITY_EVENTS = [
-  `Check-in`,
-  `Sightseeing`,
-  `Restaurant`
+  `check-in`,
+  `sightseeing`,
+  `restaurant`
 ];
 
 const ICON_PATHS = [
