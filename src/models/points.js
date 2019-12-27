@@ -1,5 +1,5 @@
 import {FilterType, SortType} from '../const';
-import {getUniqueDays, parseDateFromISOString, getDatesDiff} from '../utils/common';
+import {getUniqueDays, getDatesDiff, calculateSum} from '../utils/common';
 
 const getSortedPoints = (points, sortType) => {
   switch (sortType) {
@@ -25,6 +25,16 @@ const getPointsByFilter = (points, filterType) => {
   return points;
 };
 
+const calculateCosts = (events) => {
+  if (events.length === 0) {
+    return 0;
+  }
+  const eventsPricesAmount = calculateSum(events.map((it) => +it.price));
+  const offers = events.map((event) => event.offers.map((offer) => +offer.price));
+  const offersAmount = calculateSum(offers.map((arr) => calculateSum(arr)));
+  return eventsPricesAmount + offersAmount;
+};
+
 class Points {
   constructor() {
     this._points = [];
@@ -46,13 +56,23 @@ class Points {
     return pointsDates;
   }
 
+  getCostsAmount() {
+    return calculateCosts(this._points);
+  }
+
   setPoints(points) {
+    if (points.length === 0) {
+      this._points = [];
+      this._pointsDates = [];
+      return;
+    }
     this._points = points
-      .map((point) => Object.assign({}, point, {isFavorite: false}))
-      .map((point) => Object.assign({}, point, {startDate: parseDateFromISOString(point.startDate)}, {endDate: parseDateFromISOString(point.endDate)}))
+      .map((point) => Object.assign({}, point, {startDate: point.startDate}, {endDate: point.endDate}))
       .sort((a, b) => getDatesDiff(a.startDate, b.startDate) > 0);
 
     this._pointsDates = this._getPointsDates(this._points);
+    //  updated trip-info
+    this._callHandlers([this._dataChangeHandlers[0]]);
   }
 
   addPoint(point) {
@@ -69,17 +89,16 @@ class Points {
 
     this._points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));
     this._pointsDates = this._getPointsDates(this._points);
-
+    this._callHandlers([this._dataChangeHandlers[0]]);
     return true;
   }
 
   updatePoint(id, newPoint) {
     const index = this._getPointById(id);
     if (index === -1) {
-      return false;
+      throw Error(`no point with id ${id} in points array`);
     }
-
-    this.points = [].concat(this._points.slice(0, index), newPoint, this._points.slice(index + 1));
+    this._points[index] = Object.assign({}, newPoint);
     this._callHandlers(this._dataChangeHandlers);
     return true;
   }

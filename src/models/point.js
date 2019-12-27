@@ -1,31 +1,27 @@
+import {parseDateFromISOString} from '../utils/common';
+
 class Point {
   constructor(data) {
-    this._id = data.id;
-    this._type = data.type;
-    this._name = data.name;
-    this._icon = data.icon;
-    this._startDate = data.startDate.toISOString();
-    this._endDate = data.endDate.toISOString();
-    this._destination = data.destination;
-    this._price = data.price;
-    this._description = data.description;
-    this._photos = data.photos;
-    this._offers = data.offers;
+    this.id = data[`id`];
+    this.type = data[`type`];
+    this.startDate = parseDateFromISOString(data[`date_from`]);
+    this.endDate = parseDateFromISOString(data[`date_to`]);
+    this.destination = data[`destination`];
+    this.price = data[`base_price`];
+    this.offers = data[`offers`];
+    this.isFavorite = data[`is_favorite`];
   }
 
-  toRaw() {
+  toRAW() {
     return {
-      id: this._id,
-      type: this._type,
-      name: this._name,
-      icon: this._icon,
-      startDate: this._startDate.toISOString(),
-      endDate: this._endDate.toISOString(),
-      destination: this._destination,
-      price: this._price,
-      description: this._description,
-      photos: this._photos,
-      offers: this._offers
+      'id': `${this.id}`,
+      'type': this.type,
+      'date_from': this.startDate,
+      'date_to': this.endDate,
+      'destination': this.destination,
+      'base_price': this.price,
+      'offers': this.offers,
+      'is_favorite': this.isFavorite
     };
   }
 
@@ -34,7 +30,7 @@ class Point {
   }
 
   static parsePoints(data) {
-    return data.map(Point.parseTask);
+    return data.map(Point.parsePoint);
   }
 
   static clone(data) {
