@@ -2,7 +2,7 @@ import AbstractSmartComponent from './abstract-smart-component';
 import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import {TRANSFER_EVENTS, ACTIVITY_EVENTS} from '../const';
-import {getDatesDiff} from '../utils/common';
+import {calculateSum, getDatesDiff, getEventType} from '../utils/common';
 
 const EmojiValue = {
   TAXI: `🚕`,
@@ -24,17 +24,13 @@ const getNamesWithEmoji = (eventsNames) => {
   });
 };
 
-const calculateSum = (items) => items.reduce((acc, it) => {
-  return it + acc;
-}, 0);
-
 const convertMsToHours = (time) => Math.floor(time / (1000 * 3600));
 
 const getMoneyChartData = (points) => {
   let costs = [];
   const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
   eventsNames.forEach((it, i) => {
-    costs[i] = calculateSum(points.filter((point) => point.name === it).map((point) => +point.price));
+    costs[i] = calculateSum(points.filter((point) => point.type === it).map((point) => +point.price));
   });
   return [eventsNames, costs];
 };
@@ -72,7 +68,10 @@ const renderMoneyChart = (moneyCtx, points) => {
       },
       scales: {
         xAxes: [{
-          display: false
+          display: false,
+          ticks: {
+            suggestedMin: 0
+          }
         }],
         yAxes: [{
           gridLines: {
@@ -103,18 +102,21 @@ const renderMoneyChart = (moneyCtx, points) => {
 
 const getTransportChartData = (points) => {
   let transportEvents = [];
-  let eventsNames = [];
+  const eventsNames = TRANSFER_EVENTS;
 
   TRANSFER_EVENTS.forEach((it, i) => {
-    transportEvents[i] = points.filter((point) => point.type === `transfer` && point.name === it);
-    eventsNames[i] = transportEvents[i].length ? it : ``;
+    transportEvents[i] = points.filter((point) => getEventType(point.type) && point.type === it);
   });
-  const eventsCounts = transportEvents.filter((it) => it.length > 0).map((it) => it.length);
-  return [eventsNames.filter((it) => it !== ``), eventsCounts];
+  const eventsCounts = transportEvents.map((it) => it.length);
+  return [eventsNames, eventsCounts];
 };
 
 const renderTransportChart = (transportCtx, points) => {
-  const [eventsNames, eventsCounts] = getTransportChartData(points);
+  let [eventsNames, eventsCounts] = getTransportChartData(points);
+  if (eventsNames.length === 0) {
+    eventsNames = TRANSFER_EVENTS;
+    eventsCounts = TRANSFER_EVENTS.map(() => 0);
+  }
 
   return new Chart(transportCtx, {
     plugins: [ChartDataLabels],
@@ -124,6 +126,7 @@ const renderTransportChart = (transportCtx, points) => {
       datasets: [
         {
           data: eventsCounts,
+          minBarLength: 40,
           backgroundColor: `white`
         }
       ]
@@ -181,7 +184,7 @@ const getTimeChartData = (points) => {
   let eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
   let durations = [];
   eventsNames.forEach((it, i) => {
-    durations[i] = points.filter((point) => point.name === it)
+    durations[i] = points.filter((point) => point.type === it)
       .map((point) => getDatesDiff(point.endDate, point.startDate));
   });
   durations = durations.map((it) => convertMsToHours(calculateSum(it)));
