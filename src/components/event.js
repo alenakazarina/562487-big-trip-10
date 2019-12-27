@@ -1,5 +1,5 @@
 import AbstractComponent from './abstract-component';
-import {getDuration, getDatetime, capitalizeFirstLetter} from '../utils/common';
+import {getDuration, getDatetime, capitalizeFirstLetter, getIcon} from '../utils/common';
 import {MAX_OFFERS_COUNT_TO_SHOW} from '../const';
 
 const createOfferTemplate = (offer) => {
@@ -13,8 +13,9 @@ const createOfferTemplate = (offer) => {
 };
 
 const createEventTemplate = (event) => {
-  const {name, icon, price, startDate, endDate} = event;
-  const eventTitle = capitalizeFirstLetter(name);
+  const {type, startDate, endDate, price} = event;
+  const eventTitle = capitalizeFirstLetter(type);
+  const icon = getIcon(type);
   const start = getDatetime(startDate);
   const end = getDatetime(endDate);
   let {days, hours, minutes} = getDuration(startDate, endDate);
