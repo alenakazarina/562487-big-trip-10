@@ -1,7 +1,7 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import {
-  formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, generateEventPhotos, getEventType, generateDescription, capitalizeFirstLetter, getOfferType, isSameOffers, AVAILABLE_OFFERS} from '../utils/common';
-import {HIDE_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, DEFAULT_CITIES, PHOTOS_COUNT, Mode, Preposition} from '../const';
+  formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, getEventType, capitalizeFirstLetter, hasSameTitle} from '../utils/common';
+import {HIDE_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
@@ -24,10 +24,8 @@ const createFavoriteButtonTemplate = (id, isFavorite) => {
   `;
 };
 
-const createDestinationListSection = (id) => {
-  const optionsTemplate = DEFAULT_CITIES.map((destination) => {
-    return `<option value="${destination}">${destination}</option>`;
-  }).join(`\n`);
+const createDestinationListSection = (id, destinations) => {
+  const optionsTemplate = destinations.map((it) => `<option value="${it.name}">${it.name}</option>`).join(`\n`);
 
   return `
     <datalist id="destination-list-${id}">
@@ -36,9 +34,8 @@ const createDestinationListSection = (id) => {
   `;
 };
 
-const createOfferSelector = (offer, isChecked, id) => {
-  const {type, title, price} = offer;
-
+const createOfferSelector = (id, type, offer, isChecked) => {
+  const {title, price} = offer;
   return `
     <div class="event__offer-selector">
       <input
@@ -56,13 +53,18 @@ const createOfferSelector = (offer, isChecked, id) => {
   `;
 };
 
-const createOffersSection = (event) => {
-  const {id, offers, name} = event;
-  const eventName = name.split(`-`)[0].toUpperCase();
+//  отбирает по title с подменой
+const getShowedOffers = (offers, availableOffers) => {
+  return availableOffers.map((availableOffer) => {
 
-  const availableOffers = AVAILABLE_OFFERS[eventName];
+    return hasSameTitle(offers, availableOffer) ? offers.find((it) => it.title === availableOffer.title) : availableOffer;
+  });
+};
 
-  const offersTemplate = availableOffers.map((offer) => createOfferSelector(offer, offers.some((it) => isSameOffers(it, offer)), id)).join(`\n`);
+const createOffersSection = (id, type, offers, availableOffers) => {
+  const offersToShow = getShowedOffers(offers, availableOffers);
+
+  const offersTemplate = offersToShow.map((offer, i) => createOfferSelector(`${id}-${i}`, type, offer, hasSameTitle(offers, offer))).join(`\n`);
 
   return `
     <section class="event__section  event__section--offers">
@@ -75,19 +77,21 @@ const createOffersSection = (event) => {
   `;
 };
 
-const createPhotoTemplate = (photo) => {
+const createPhotoTemplate = (picture) => {
+  const {src, description} = picture;
   return `
-    <img class="event__photo" src="${photo}" alt="Event photo" />
+    <img class="event__photo" src="${src}" alt="${description}" />
   `;
 };
 
-const createDestinationSection = (event) => {
-  const photosTemplate = event.photos.map((it) => createPhotoTemplate(it)).join(`\n`);
+const createDestinationSection = (destination) => {
+  const {name, description, pictures} = destination;
+  const photosTemplate = pictures.map((it) => createPhotoTemplate(it)).join(`\n`);
 
   return `
     <section class="event__section  event__section--destination">
-      <h3 class="event__section-title  event__section-title--destination">${event.destination}</h3>
-      <p class="event__destination-description">${event.description}</p>
+      <h3 class="event__section-title  event__section-title--destination">${name}</h3>
+      <p class="event__destination-description">${description}</p>
 
       <div class="event__photos-container">
         <div class="event__photos-tape">
@@ -102,15 +106,15 @@ const createEventTypeItem = (eventType, isChecked, id) => {
   return `
     <div class="event__type-item">
       <input
-        id="event-type-${eventType.toLowerCase()}-${id}"
+        id="event-type-${eventType}-${id}"
         class="event__type-input  visually-hidden"
         type="radio"
         name="event-type"
-        value="${eventType.toLowerCase()}"
+        value="${eventType}"
         ${isChecked ? `checked` : ``}>
       <label
-        class="event__type-label  event__type-label--${eventType.toLowerCase()}"
-        for="event-type-${eventType.toLowerCase()}-${id}">${eventType}
+        class="event__type-label  event__type-label--${eventType}"
+        for="event-type-${eventType}-${id}">${capitalizeFirstLetter(eventType)}
       </label>
     </div>
   `;
@@ -119,11 +123,11 @@ const createEventTypeItem = (eventType, isChecked, id) => {
 const createEventTypeListSection = (event) => {
   const {id} = event;
   const activityEventItems = ACTIVITY_EVENTS.map(
-      (activityEvent) => createEventTypeItem(activityEvent, activityEvent === event.name, id)
+      (activityEvent) => createEventTypeItem(activityEvent, activityEvent === event.type, id)
   ).join(`\n`);
 
   const transferEventItems = TRANSFER_EVENTS.map(
-      (transferEvent) => createEventTypeItem(transferEvent, transferEvent === event.name, id)
+      (transferEvent) => createEventTypeItem(transferEvent, transferEvent === event.type, id)
   ).join(`\n`);
 
   return `
@@ -141,17 +145,19 @@ const createEventTypeListSection = (event) => {
   `;
 };
 
-const createFormHeaderTemplate = (event, mode) => {
-  const {id, type, name, price, destination, icon, isFavorite} = event;
+const createFormHeaderTemplate = (event, destinations, mode) => {
+  const {id, type, startDate, endDate, destination, price, isFavorite} = event;
 
-  const preposition = Preposition[type];
-  const eventName = capitalizeFirstLetter(name);
+  const eventName = capitalizeFirstLetter(type);
+  const preposition = Preposition[getEventType(type)];
+  const eventIcon = getIcon(type);
+  const eventDestination = destination.name;
 
-  const startDate = formatTimeWithSlashes(event.startDate);
-  const endDate = formatTimeWithSlashes(event.endDate);
+  const eventStartDate = formatTimeWithSlashes(startDate);
+  const eventsEndDate = formatTimeWithSlashes(endDate);
 
   const eventTypeListSection = createEventTypeListSection(event);
-  const destinationListSection = createDestinationListSection(id);
+  const destinationListSection = createDestinationListSection(id, destinations.getAll());
 
   const resetButtonName = mode === Mode.ADD ? `Cancel` : `Delete`;
   const isFavoriteButton = mode === Mode.ADD ? `` : createFavoriteButtonTemplate(id, isFavorite);
@@ -160,7 +166,7 @@ const createFormHeaderTemplate = (event, mode) => {
     <div class="event__type-wrapper">
       <label class="event__type  event__type-btn" for="event-type-toggle-${id}">
         <span class="visually-hidden">Choose event type</span>
-        <img class="event__type-icon" width="17" height="17" src="img/icons/${icon}" alt="${name} icon">
+        <img class="event__type-icon" width="17" height="17" src="img/icons/${eventIcon}" alt="${eventName} icon">
       </label>
       <input class="event__type-toggle  visually-hidden" id="event-type-toggle-${id}" type="checkbox">
       ${eventTypeListSection}
@@ -170,19 +176,19 @@ const createFormHeaderTemplate = (event, mode) => {
       <label class="event__label  event__type-output" for="event-destination-${id}">
         ${eventName} ${preposition}
       </label>
-      <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${destination}" list="destination-list-${id}" required>
+      <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${eventDestination}" list="destination-list-${id}" required>
       ${destinationListSection}
     </div>
 
     <div class="event__field-group  event__field-group--time">
       <label class="visually-hidden" for="event-start-time-${id}">From
       </label>
-      <input class="event__input  event__input--time" id="event-start-time-${id}" type="text" name="event-start-time" value="${startDate}">
+      <input class="event__input  event__input--time" id="event-start-time-${id}" type="text" name="event-start-time" value="${eventStartDate}">
       &mdash;
       <label class="visually-hidden" for="event-end-time-${id}">
         To
       </label>
-      <input class="event__input  event__input--time" id="event-end-time-${id}" type="text" name="event-end-time" value="${endDate}" required>
+      <input class="event__input  event__input--time" id="event-end-time-${id}" type="text" name="event-end-time" value="${eventsEndDate}" required>
     </div>
 
     <div class="event__field-group  event__field-group--price">
@@ -203,21 +209,23 @@ const createFormHeaderTemplate = (event, mode) => {
   `;
 };
 
-const createDetailsTemplate = (event, isDetails) => {
-  const offers = createOffersSection(event);
-  const destination = createDestinationSection(event);
+const createDetailsTemplate = (event, destinations, availableOffers, isDetails) => {
+  const {id, type, destination, offers} = event;
+  const eventDestination = destinations.getDestinationByName(destination.name);
+  const offersTemplate = availableOffers.length ? createOffersSection(id, type, offers, availableOffers) : ``;
+  const destinationTemplate = createDestinationSection(eventDestination);
   const isHidden = isDetails ? `` : HIDE_CLASS;
   return `
     <section class="event__details ${isHidden}">
-      ${offers}
-      ${destination}
+      ${offersTemplate}
+      ${destinationTemplate}
     </section>
   `;
 };
 
-const createEditEventTemplate = (event, mode, isDetails) => {
-  const headerInner = createFormHeaderTemplate(event, mode);
-  const detailsSection = createDetailsTemplate(event, isDetails);
+const createEditEventTemplate = (event, destinations, availableOffers, mode, isDetails) => {
+  const headerInner = createFormHeaderTemplate(event, destinations, mode);
+  const detailsSection = createDetailsTemplate(event, destinations, availableOffers, isDetails);
 
   return mode === Mode.ADD ? `
     <form class="trip-events__item  event  event--edit" action="#" method="post">
@@ -242,10 +250,14 @@ const createEditEventTemplate = (event, mode, isDetails) => {
 };
 
 class EditEventForm extends AbstractSmartComponent {
-  constructor(event, mode) {
+  constructor(event, destinations, offers, mode) {
     super();
     this._event = event;
+    this._destinations = destinations;
+    this._offers = offers;
+    this._availableOffers = this._offers.getOffersByType(this._event.type);
     this._eventForReset = Object.assign({}, event);
+
     this._mode = mode;
     this._details = mode === Mode.EDIT;
 
@@ -259,7 +271,7 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event, this._mode, this._details);
+    return createEditEventTemplate(this._event, this._destinations, this._availableOffers, this._mode, this._details);
   }
 
   setSubmitHandler(handler) {
@@ -306,27 +318,18 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   getFormData() {
-    const form = this.getElement();
-    const eventDescription = form.querySelector(`.event__destination-description`).innerText;
+    const form = this._mode === Mode.ADD ? this.getElement() : this.getElement().querySelector(`form`);
     const formData = new FormData(form);
-    const eventName = form.querySelector(`.event__type-output`).innerText.trim().split(` `)[0];
-    const isActivityEvent = ACTIVITY_EVENTS.some((it) => it === eventName);
-    const eventPhotos = [].map.call(form.querySelectorAll(`.event__photo`), (it) => it.src);
-    const eventOffers = this._event.offers;
 
     const newPoint = {
       id: this._event.id,
-      type: isActivityEvent ? `activity` : `transfer`,
-      name: eventName,
-      icon: `${eventName.toLowerCase()}.png`,
+      type: this._event.type,
       startDate: parseDateWithSlashes(formData.get(`event-start-time`)),
       endDate: parseDateWithSlashes(formData.get(`event-end-time`)),
-      destination: formData.get(`event-destination`),
-      description: eventDescription,
-      price: formData.get(`event-price`),
-      photos: eventPhotos,
-      offers: eventOffers,
-      isFavorite: false
+      destination: Object.assign({}, this._destinations.getDestinationByName(formData.get(`event-destination`))),
+      price: +formData.get(`event-price`),
+      offers: this._event.offers,
+      isFavorite: this._event.isFavorite
     };
 
     return newPoint;
@@ -353,30 +356,22 @@ class EditEventForm extends AbstractSmartComponent {
     }
 
     element.querySelector(`.event__type-list`).addEventListener(`change`, (evt) => {
+      this._availableOffers = this._offers.getOffersByType(evt.target.value);
       this._event = Object.assign({}, this._event,
-          {type: getEventType(evt.target.value)},
-          {name: evt.target.value},
-          {icon: getIcon(evt.target.value)},
+          {type: evt.target.value},
           {offers: []});
+
       this.rerender();
     });
 
     element.querySelector(`.event__input--destination`).addEventListener(`change`, (evt) => {
       const inputValue = evt.target.value.trim();
-      const isValidDestination = DEFAULT_CITIES.some((it) => it === inputValue);
-      if (!isValidDestination) {
-        this._event.destination = ``;
+      const isValidDestination = this._destinations.getAll().findIndex((it) => it.name === inputValue);
+      if (isValidDestination === -1) {
+        this._event.destination.name = ``;
         this._details = false;
       } else {
-        this._event = Object.assign({}, this._event,
-            {destination: evt.target.value.trim()},
-            {description: generateDescription()}
-        );
-        if (this._mode === Mode.ADD) {
-          this._event = Object.assign({}, this._event,
-              {photos: generateEventPhotos(PHOTOS_COUNT)}
-          );
-        }
+        this._event.destination = Object.assign({}, this._event.destination, {name: evt.target.value.trim()});
         this._details = true;
       }
       this.rerender();
@@ -396,16 +391,15 @@ class EditEventForm extends AbstractSmartComponent {
       this._event.price = +evt.target.value;
     });
 
-    element.querySelector(`.event__section--offers`).addEventListener(`change`, () => {
-      this._event.offers = [].map.call(element.querySelectorAll(`.event__offer-checkbox:checked + label`), (it) => {
-        const offerLabel = it.innerText;
-        return {
-          type: getOfferType(offerLabel),
-          title: offerLabel.split(`+`)[0],
-          price: +offerLabel.split(`€`)[1]
-        };
+    if (this._availableOffers.length) {
+      element.querySelector(`.event__section--offers`).addEventListener(`change`, () => {
+        const shownOffers = getShowedOffers(this._event.offers, this._availableOffers);
+        this._event.offers = [].map.call(element.querySelectorAll(`.event__offer-checkbox:checked`), (it) => {
+          const index = +it.id.split(`-`).pop();
+          return Object.assign({}, shownOffers[index]);
+        });
       });
-    });
+    }
   }
 
   _applyFlatpickr() {

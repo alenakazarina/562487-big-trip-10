@@ -11,12 +11,8 @@ class AddEventButton extends AbstractComponent {
     this.getElement().addEventListener(`click`, handler);
   }
 
-  disable() {
-    this._element.disabled = true;
-  }
-
-  enable() {
-    this._element.disabled = false;
+  setDisabled(value) {
+    this._element.disabled = value;
   }
 }
 
