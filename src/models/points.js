@@ -52,8 +52,7 @@ class Points {
   }
 
   getPointsDates(points) {
-    const pointsDates = this._getPointsDates(points);
-    return pointsDates;
+    return points.length ? this._getPointsDates(points) : [];
   }
 
   getCostsAmount() {

@@ -2,6 +2,8 @@ import SortComponent from '../components/sort';
 import TripDaysListComponent from '../components/trip-days-list';
 import TripDayComponent from '../components/trip-day';
 import NoPointsComponent from '../components/no-points';
+import AddEventButtonComponent from '../components/add-event-button';
+import LoaderComponent from '../components/loader';
 import PointController from './point';
 import {render, remove} from '../utils/render';
 import {isSameDay} from '../utils/common';
@@ -10,10 +12,10 @@ import {SortType, Mode} from '../const';
 const HIDE_CLASS = `trip-events--hidden`;
 
 class TripController {
-  constructor(container, pointsModel, destinationsModel, offersModel, api) {
+  constructor(container, pointsModel, api) {
     this._pointsModel = pointsModel;
-    this._destinationsModel = destinationsModel;
-    this._offersModel = offersModel;
+    this._destinations = [];
+    this._offers = [];
     this._api = api;
 
     this._pointControllers = [];
@@ -24,7 +26,8 @@ class TripController {
     this._tripDaysListComponent = new TripDaysListComponent();
     this._noPointsComponent = new NoPointsComponent();
     this._tripDayComponent = new TripDayComponent();
-    this._addEventButtonComponent = null;
+    this._addEventButtonComponent = new AddEventButtonComponent();
+    this._loaderComponent = new LoaderComponent();
     this._newEventId = 0;
 
     this._onDataChange = this._onDataChange.bind(this);
@@ -39,29 +42,19 @@ class TripController {
   }
 
   render() {
-    const events = this._pointsModel.getPoints();
-    const eventsDates = this._pointsModel.getPointsDates(events);
-
-    if (events.length) {
-      render(this._container, this._sortComponent.getElement());
-      render(this._container, this._tripDaysListComponent.getElement());
-      this._pointControllers = this._renderTripDays(this._tripDaysListComponent.getElement(), eventsDates, events)
-        .reduce((days, day) => days.concat(day), []);
-    } else {
-      render(this._container, this._noPointsComponent.getElement());
-      return;
-    }
-  }
-
-  renderAddEventForm(addEventButtonComponent) {
-    this._onViewChange();
-    this._pointControllers.forEach((it) => it.setOpenButton(true));
-    this._addEventButtonComponent = addEventButtonComponent;
-    this._addEventButtonComponent.setDisabled(true);
-
-    this._newEventId = this._pointsModel.getPoints().length;
-    this._addEventFormController = new PointController(this._container, this._onDataChange, this._onViewChange);
-    this._addEventFormController.render(this._newEventId, {}, this._destinationsModel, this._offersModel, Mode.ADD);
+    this._api.getPoints().then((points) => {
+      this._renderAddEventButton();
+      this._pointsModel.setPoints(points);
+      const events = this._pointsModel.getPoints();
+      const isNoPoints = events.length === 0;
+      if (isNoPoints) {
+        render(this._container, this._noPointsComponent.getElement());
+        return;
+      } else {
+        render(this._container, this._loaderComponent.getElement());
+        this._renderPoints();
+      }
+    });
   }
 
   show() {
@@ -72,10 +65,43 @@ class TripController {
     this._container.classList.add(HIDE_CLASS);
   }
 
+  _renderPoints() {
+    Promise.all([this._api.getDestinations(), this._api.getOffers()]).then((data) => {
+      const [destinations, offers] = data;
+      this._destinations = destinations;
+      this._offers = offers;
+      const events = this._pointsModel.getPoints();
+      const eventsDates = this._pointsModel.getPointsDates(events);
+      remove(this._loaderComponent);
+      render(this._container, this._sortComponent.getElement());
+      render(this._container, this._tripDaysListComponent.getElement());
+      this._pointControllers = this._renderTripDays(this._tripDaysListComponent.getElement(), eventsDates, events)
+      .reduce((days, day) => days.concat(day), []);
+    });
+  }
+
+  _renderAddEventForm() {
+    this._onViewChange();
+    this._pointControllers.forEach((it) => it.setOpenButton(true));
+
+    this._addEventButtonComponent.setDisabled(true);
+    this._newEventId = this._pointsModel.getPoints().length;
+    this._addEventFormController = new PointController(this._container, this._onDataChange, this._onViewChange);
+    this._addEventFormController.render(this._newEventId, {}, this._destinations, this._offers, Mode.ADD);
+  }
+
+  _renderAddEventButton() {
+    const tripMainElement = document.querySelector(`.trip-main`);
+    render(tripMainElement, this._addEventButtonComponent.getElement());
+    this._addEventButtonComponent.setClickHandler(() => {
+      this._renderAddEventForm();
+    });
+  }
+
   _renderEvents(events, container) {
     return events.map((event) => {
       const pointController = new PointController(container, this._onDataChange, this._onViewChange);
-      pointController.render(event.id, event, this._destinationsModel, this._offersModel, Mode.VIEW);
+      pointController.render(event.id, event, this._destinations, this._offers, Mode.VIEW);
       return pointController;
     });
   }

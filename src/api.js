@@ -24,8 +24,8 @@ class API {
 
   getPoints() {
     return this._load({url: `points`})
-              .then((response) => response.json())
-              .then(Point.parsePoints);
+      .then((response) => response.json())
+      .then(Point.parsePoints);
   }
 
   createPoint(point) {
@@ -56,14 +56,14 @@ class API {
 
   getDestinations() {
     return this._load({url: `destinations`})
-              .then((response) => response.json())
-              .then(Destination.parseDestinations);
+      .then((response) => response.json())
+      .then(Destination.parseDestinations);
   }
 
   getOffers() {
     return this._load({url: `offers`})
-              .then((response) => response.json())
-              .then(Offer.parseOffers);
+      .then((response) => response.json())
+      .then(Offer.parseOffers);
   }
 
   _load({url, method = Method.GET, body = null, headers = new Headers()}) {

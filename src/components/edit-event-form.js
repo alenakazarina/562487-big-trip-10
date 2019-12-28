@@ -1,7 +1,7 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import {
   formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, getEventType, capitalizeFirstLetter, hasSameTitle} from '../utils/common';
-import {HIDE_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
+import {ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
@@ -157,7 +157,7 @@ const createFormHeaderTemplate = (event, destinations, mode) => {
   const eventsEndDate = formatTimeWithSlashes(endDate);
 
   const eventTypeListSection = createEventTypeListSection(event);
-  const destinationListSection = createDestinationListSection(id, destinations.getAll());
+  const destinationListSection = createDestinationListSection(id, destinations);
 
   const resetButtonName = mode === Mode.ADD ? `Cancel` : `Delete`;
   const isFavoriteButton = mode === Mode.ADD ? `` : createFavoriteButtonTemplate(id, isFavorite);
@@ -209,14 +209,15 @@ const createFormHeaderTemplate = (event, destinations, mode) => {
   `;
 };
 
-const createDetailsTemplate = (event, destinations, availableOffers, isDetails) => {
+const createDetailsTemplate = (event, availableOffers, isDetails) => {
+  if (!isDetails) {
+    return ``;
+  }
   const {id, type, destination, offers} = event;
-  const eventDestination = destinations.getDestinationByName(destination.name);
   const offersTemplate = availableOffers.length ? createOffersSection(id, type, offers, availableOffers) : ``;
-  const destinationTemplate = createDestinationSection(eventDestination);
-  const isHidden = isDetails ? `` : HIDE_CLASS;
+  const destinationTemplate = createDestinationSection(destination);
   return `
-    <section class="event__details ${isHidden}">
+    <section class="event__details">
       ${offersTemplate}
       ${destinationTemplate}
     </section>
@@ -225,7 +226,7 @@ const createDetailsTemplate = (event, destinations, availableOffers, isDetails) 
 
 const createEditEventTemplate = (event, destinations, availableOffers, mode, isDetails) => {
   const headerInner = createFormHeaderTemplate(event, destinations, mode);
-  const detailsSection = createDetailsTemplate(event, destinations, availableOffers, isDetails);
+  const detailsSection = createDetailsTemplate(event, availableOffers, isDetails);
 
   return mode === Mode.ADD ? `
     <form class="trip-events__item  event  event--edit" action="#" method="post">
@@ -255,7 +256,7 @@ class EditEventForm extends AbstractSmartComponent {
     this._event = event;
     this._destinations = destinations;
     this._offers = offers;
-    this._availableOffers = this._offers.getOffersByType(this._event.type);
+    this._availableOffers = this._offers.find((it) => it.type === this._event.type).offers;
     this._eventForReset = Object.assign({}, event);
 
     this._mode = mode;
@@ -326,7 +327,7 @@ class EditEventForm extends AbstractSmartComponent {
       type: this._event.type,
       startDate: parseDateWithSlashes(formData.get(`event-start-time`)),
       endDate: parseDateWithSlashes(formData.get(`event-end-time`)),
-      destination: Object.assign({}, this._destinations.getDestinationByName(formData.get(`event-destination`))),
+      destination: Object.assign({}, this._destinations.find((it) => it.name === formData.get(`event-destination`))),
       price: +formData.get(`event-price`),
       offers: this._event.offers,
       isFavorite: this._event.isFavorite
@@ -356,9 +357,10 @@ class EditEventForm extends AbstractSmartComponent {
     }
 
     element.querySelector(`.event__type-list`).addEventListener(`change`, (evt) => {
-      this._availableOffers = this._offers.getOffersByType(evt.target.value);
+      const inputValue = evt.target.value;
+      this._availableOffers = this._offers.find((it) => it.type === inputValue).offers;
       this._event = Object.assign({}, this._event,
-          {type: evt.target.value},
+          {type: inputValue},
           {offers: []});
 
       this.rerender();
@@ -366,12 +368,16 @@ class EditEventForm extends AbstractSmartComponent {
 
     element.querySelector(`.event__input--destination`).addEventListener(`change`, (evt) => {
       const inputValue = evt.target.value.trim();
-      const isValidDestination = this._destinations.getAll().findIndex((it) => it.name === inputValue);
+      const isValidDestination = this._destinations.findIndex((it) => it.name === inputValue);
       if (isValidDestination === -1) {
         this._event.destination.name = ``;
         this._details = false;
       } else {
-        this._event.destination = Object.assign({}, this._event.destination, {name: evt.target.value.trim()});
+        const destination = this._destinations.find((it) => it.name === inputValue);
+        this._event.destination = Object.assign({}, this._event.destination,
+            {name: destination.name},
+            {description: destination.description},
+            {pictures: destination.pictures});
         this._details = true;
       }
       this.rerender();
@@ -391,7 +397,7 @@ class EditEventForm extends AbstractSmartComponent {
       this._event.price = +evt.target.value;
     });
 
-    if (this._availableOffers.length) {
+    if (this._details && this._availableOffers.length) {
       element.querySelector(`.event__section--offers`).addEventListener(`change`, () => {
         const shownOffers = getShowedOffers(this._event.offers, this._availableOffers);
         this._event.offers = [].map.call(element.querySelectorAll(`.event__offer-checkbox:checked`), (it) => {
