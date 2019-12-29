@@ -1,9 +1,11 @@
 import {render, replace} from '../utils/render';
 import EventComponent from '../components/event';
 import EditEventComponent from '../components/edit-event-form';
-import {Mode} from '../const';
+import {ERROR_CLASS, Mode} from '../const';
 import {remove} from '../utils/render';
 import PointModel from '../models/point';
+
+const SHAKE_ANIMATION_TIMEOUT = 600;
 
 const getDefaultEvent = (newEventId) => {
   return ({
@@ -106,6 +108,26 @@ class PointController {
     }
   }
 
+  shake() {
+    const form = this._mode === Mode.ADD ? this._addEventFormComponent : this._editEventComponent;
+    form.getElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+
+    setTimeout(() => {
+      form.getElement().style.animation = ``;
+      form.setData({
+        saveButtonText: `Save`,
+        deleteButtonText: `Delete`,
+      });
+      form.getElement().classList.add(ERROR_CLASS);
+      form.setDisabled(false);
+    }, SHAKE_ANIMATION_TIMEOUT);
+  }
+
+  removeDisabledState() {
+    const form = this._mode === Mode.ADD ? this._addEventFormComponent : this._editEventComponent;
+    form.setDisabled(false);
+  }
+
   _onEscKeyPress(evt) {
     if (evt.key === `Escape` || evt.key === `Esc`) {
       if (this._mode === Mode.ADD) {
@@ -144,11 +166,17 @@ class PointController {
       evt.preventDefault();
       const data = this._editEventComponent.getFormData();
       const formData = parseFormData(data);
+      this._editEventComponent.setData({
+        saveButtonText: `Saving...`,
+      });
       this._onDataChange(this, this._event, formData);
-      this.setDefaultView();
     });
 
     this._editEventComponent.setDeleteClickHandler(() => {
+      this._editEventComponent.setData({
+        deleteButtonText: `Deleting...`,
+      });
+      document.removeEventListener(`keydown`, this._onEscKeyPress);
       this._onDataChange(this, this._event, null);
     });
   }
@@ -159,6 +187,9 @@ class PointController {
       const data = this._addEventFormComponent.getFormData();
       const formData = parseFormData(data);
       document.removeEventListener(`keydown`, this._onEscKeyPress);
+      this._addEventFormComponent.setData({
+        saveButtonText: `Saving...`,
+      });
       this._onDataChange(this, null, formData);
     });
     this._addEventFormComponent.setDeleteClickHandler(() => {

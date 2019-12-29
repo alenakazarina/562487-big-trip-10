@@ -22,7 +22,7 @@ const createDatesTemplate = (events) => {
 const createTitlesTemplate = (events) => {
   const titles = Array.from(getUnique(events.map((it) => it.destination.name)));
   return titles.length <= 2 ?
-    titles.join(`&mdash`) :
+    titles.join(`&mdash;`) :
     `${titles[0]} &mdash; ... &mdash; ${titles[titles.length - 1]}`;
 };
 
