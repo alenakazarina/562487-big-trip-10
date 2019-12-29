@@ -9,7 +9,7 @@ import {MenuTab} from './const';
 
 import API from './api';
 
-const AUTHORIZATION = `Basic jOpdjsLoPXNzd29yZAo=`;
+const AUTHORIZATION = `Basic jILdjsLoPPAzd29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
 
 const api = new API(END_POINT, AUTHORIZATION);
