@@ -51,8 +51,16 @@ class Points {
     return getSortedPoints(getPointsByFilter(this._points, this._activeFilterType), this._activeSortType);
   }
 
-  getPointsDates(points) {
-    return points.length ? this._getPointsDates(points) : [];
+  getPointsDates(points = this._points) {
+    if (!points.length) {
+      return [];
+    }
+    const startDates = points.map((point) => point.startDate).sort((a, b) => getDatesDiff(a, b));
+    return getUniqueDays(startDates);
+  }
+
+  getPointsLength() {
+    return this._points.length;
   }
 
   getCostsAmount() {
@@ -69,14 +77,13 @@ class Points {
       .map((point) => Object.assign({}, point, {startDate: point.startDate}, {endDate: point.endDate}))
       .sort((a, b) => getDatesDiff(a.startDate, b.startDate) > 0);
 
-    this._pointsDates = this._getPointsDates(this._points);
-    //  updated trip-info
+    this._pointsDates = this.getPointsDates();
     this._callHandlers([this._dataChangeHandlers[0]]);
   }
 
   addPoint(point) {
     this._points = [].concat(point, this._points);
-    this._pointsDates = this._getPointsDates(this._points);
+    this._pointsDates = this.getPointsDates();
     this._callHandlers(this._dataChangeHandlers);
   }
 
@@ -87,8 +94,8 @@ class Points {
     }
 
     this._points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));
-    this._pointsDates = this._getPointsDates(this._points);
-    this._callHandlers([this._dataChangeHandlers[0]]);
+    this._pointsDates = this.getPointsDates();
+    this._callHandlers(this._dataChangeHandlers);
     return true;
   }
 
@@ -131,11 +138,6 @@ class Points {
 
   _getPointById(id) {
     return this._points.findIndex((it) => it.id === id);
-  }
-
-  _getPointsDates(points) {
-    const startDates = points.map((point) => point.startDate).sort((a, b) => getDatesDiff(a, b));
-    return getUniqueDays(startDates);
   }
 }
 

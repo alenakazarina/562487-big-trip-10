@@ -3,13 +3,18 @@ import TripDaysListComponent from '../components/trip-days-list';
 import TripDayComponent from '../components/trip-day';
 import NoPointsComponent from '../components/no-points';
 import AddEventButtonComponent from '../components/add-event-button';
-import LoaderComponent from '../components/loader';
 import PointController from './point';
-import {render, remove} from '../utils/render';
+import {render} from '../utils/render';
 import {isSameDay} from '../utils/common';
 import {SortType, Mode} from '../const';
 
 const HIDE_CLASS = `trip-events--hidden`;
+
+const Message = {
+  LOADING: `Loading...`,
+  NO_POINTS: `Click New Event to create your first point`,
+  FILTER_NO_POINTS: `No events =(`,
+};
 
 class TripController {
   constructor(container, pointsModel, api) {
@@ -27,7 +32,6 @@ class TripController {
     this._noPointsComponent = new NoPointsComponent();
     this._tripDayComponent = new TripDayComponent();
     this._addEventButtonComponent = new AddEventButtonComponent();
-    this._loaderComponent = new LoaderComponent();
     this._newEventId = 0;
 
     this._onDataChange = this._onDataChange.bind(this);
@@ -46,12 +50,16 @@ class TripController {
       this._renderAddEventButton();
       this._pointsModel.setPoints(points);
       const events = this._pointsModel.getPoints();
+
       const isNoPoints = events.length === 0;
+      render(this._container, this._noPointsComponent.getElement());
       if (isNoPoints) {
-        render(this._container, this._noPointsComponent.getElement());
+        this._noPointsComponent.setMessage(Message.NO_POINTS);
+        this._noPointsComponent.show();
         return;
       } else {
-        render(this._container, this._loaderComponent.getElement());
+        this._noPointsComponent.setMessage(Message.LOADING);
+        this._noPointsComponent.show();
         this._renderPoints();
       }
     });
@@ -72,7 +80,8 @@ class TripController {
       this._offers = offers;
       const events = this._pointsModel.getPoints();
       const eventsDates = this._pointsModel.getPointsDates(events);
-      remove(this._loaderComponent);
+
+      this._noPointsComponent.hide();
       render(this._container, this._sortComponent.getElement());
       render(this._container, this._tripDaysListComponent.getElement());
       this._pointControllers = this._renderTripDays(this._tripDaysListComponent.getElement(), eventsDates, events)
@@ -81,8 +90,24 @@ class TripController {
   }
 
   _renderAddEventForm() {
+    const isEmptyDestinations = this._destinations.length === 0;
+    const isEmptyOffers = this._offers.length === 0;
+    if (isEmptyDestinations && isEmptyOffers) {
+      Promise.all([this._api.getDestinations(), this._api.getOffers()]).then((data) => {
+        const [destinations, offers] = data;
+        this._destinations = destinations;
+        this._offers = offers;
+        this._createAddEventForm();
+      });
+      return;
+    }
+    this._createAddEventForm();
+  }
+
+  _createAddEventForm() {
     this._onViewChange();
     this._pointControllers.forEach((it) => it.setOpenButton(true));
+    this._noPointsComponent.hide();
 
     this._addEventButtonComponent.setDisabled(true);
     this._newEventId = this._pointsModel.getPoints().length;
@@ -115,29 +140,51 @@ class TripController {
     });
   }
 
+  _renderEventsList(events) {
+    this._removeDayInfo();
+    render(this._tripDaysListComponent.getElement(), this._tripDayComponent.getElement());
+    this._pointControllers = this._renderEvents(events, this._tripDayComponent.getElement().children[1]);
+  }
+
+  _renderEventsListWithDays(events, eventsDates) {
+    this._sortComponent.getElement().children[0].innerHTML = `Day`;
+    this._pointControllers = this._renderTripDays(this._tripDaysListComponent.getElement(), eventsDates, events)
+      .reduce((days, day) => days.concat(day), []);
+  }
+
   _renderWithSortType() {
     this._tripDaysListComponent.getElement().innerHTML = ``;
     this._removeEscListenersIfExists();
 
-    const events = this._pointsModel.getPoints();
-    const eventsDates = this._pointsModel.getPointsDates(events);
-    if (events.length) {
+    const isAnyPoints = this._pointsModel.getPointsLength();
+
+    if (isAnyPoints) {
+      const events = this._pointsModel.getPoints();
+      if (events.length === 0) {
+        this._showMessage(Message.FILTER_NO_POINTS);
+        return;
+      }
+
+      this._noPointsComponent.hide();
       this._sortComponent.show();
-      remove(this._noPointsComponent);
 
       if (this._sortType === SortType.EVENT) {
-        this._sortComponent.getElement().children[0].innerHTML = `Day`;
-        this._pointControllers = this._renderTripDays(this._tripDaysListComponent.getElement(), eventsDates, events)
-          .reduce((days, day) => days.concat(day), []);
+        const eventsDates = this._pointsModel.getPointsDates(events);
+        this._renderEventsListWithDays(events, eventsDates);
+        return;
       } else {
-        this._removeDayInfo();
-        render(this._tripDaysListComponent.getElement(), this._tripDayComponent.getElement());
-        this._pointControllers = this._renderEvents(events, this._tripDayComponent.getElement().children[1]);
+        this._renderEventsList(events);
+        return;
       }
     } else {
-      this._sortComponent.hide();
-      render(this._container, this._noPointsComponent.getElement());
+      this._showMessage(Message.NO_POINTS);
     }
+  }
+
+  _showMessage(text) {
+    this._sortComponent.hide();
+    this._noPointsComponent.setMessage(text);
+    this._noPointsComponent.show();
   }
 
   _removeDayInfo() {
@@ -209,6 +256,11 @@ class TripController {
       this._addEventButtonComponent.setDisabled(false);
       this._addEventFormController.destroy();
       this._pointControllers.forEach((it) => it.setOpenButton(false));
+      if (this._pointsModel.getPoints().length === 0) {
+        this._noPointsComponent.setMessage(Message.NO_POINTS);
+      } else {
+        this._noPointsComponent.setMessage(Message.LOADING);
+      }
     }
   }
 }
