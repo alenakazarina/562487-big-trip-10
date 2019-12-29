@@ -1,9 +1,14 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import {
   formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, getEventType, capitalizeFirstLetter, hasSameTitle} from '../utils/common';
-import {ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
+import {ERROR_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+
+const DefaultData = {
+  deleteButtonText: `Delete`,
+  saveButtonText: `Save`,
+};
 
 const createFavoriteButtonTemplate = (id, isFavorite) => {
   const isChecked = isFavorite ? `checked` : ``;
@@ -145,8 +150,8 @@ const createEventTypeListSection = (event) => {
   `;
 };
 
-const createFormHeaderTemplate = (event, destinations, mode) => {
-  const {id, type, startDate, endDate, destination, price, isFavorite} = event;
+const createFormHeaderTemplate = (event, destinations) => {
+  const {id, type, startDate, endDate, destination, price} = event;
 
   const eventName = capitalizeFirstLetter(type);
   const preposition = Preposition[getEventType(type)];
@@ -158,9 +163,6 @@ const createFormHeaderTemplate = (event, destinations, mode) => {
 
   const eventTypeListSection = createEventTypeListSection(event);
   const destinationListSection = createDestinationListSection(id, destinations);
-
-  const resetButtonName = mode === Mode.ADD ? `Cancel` : `Delete`;
-  const isFavoriteButton = mode === Mode.ADD ? `` : createFavoriteButtonTemplate(id, isFavorite);
 
   return `
     <div class="event__type-wrapper">
@@ -202,10 +204,6 @@ const createFormHeaderTemplate = (event, destinations, mode) => {
         required
         min="0">
     </div>
-
-    <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-    <button class="event__reset-btn" type="reset">${resetButtonName}</button>
-    ${isFavoriteButton}
   `;
 };
 
@@ -224,14 +222,18 @@ const createDetailsTemplate = (event, availableOffers, isDetails) => {
   `;
 };
 
-const createEditEventTemplate = (event, destinations, availableOffers, mode, isDetails) => {
+const createEditEventTemplate = (event, destinations, availableOffers, mode, isDetails, externalData) => {
+  const {id, isFavorite} = event;
   const headerInner = createFormHeaderTemplate(event, destinations, mode);
   const detailsSection = createDetailsTemplate(event, availableOffers, isDetails);
+  const favoriteButton = createFavoriteButtonTemplate(id, isFavorite);
 
   return mode === Mode.ADD ? `
     <form class="trip-events__item  event  event--edit" action="#" method="post">
       <header class="event__header">
         ${headerInner}
+        <button class="event__save-btn  btn  btn--blue" type="submit">${externalData.saveButtonText}</button>
+        <button class="event__reset-btn" type="reset">Cancel</button>
       </header>
       ${detailsSection}
     </form>
@@ -240,6 +242,9 @@ const createEditEventTemplate = (event, destinations, availableOffers, mode, isD
       <form class="event  event--edit" action="#" method="post">
         <header class="event__header">
           ${headerInner}
+          <button class="event__save-btn  btn  btn--blue" type="submit">${externalData.saveButtonText}</button>
+          <button class="event__reset-btn" type="reset">${externalData.deleteButtonText}</button>
+          ${favoriteButton}
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
@@ -258,6 +263,7 @@ class EditEventForm extends AbstractSmartComponent {
     this._offers = offers;
     this._availableOffers = this._offers.find((it) => it.type === this._event.type).offers;
     this._eventForReset = Object.assign({}, event);
+    this._externalData = DefaultData;
 
     this._mode = mode;
     this._details = mode === Mode.EDIT;
@@ -272,7 +278,7 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event, this._destinations, this._availableOffers, this._mode, this._details);
+    return createEditEventTemplate(this._event, this._destinations, this._availableOffers, this._mode, this._details, this._externalData);
   }
 
   setSubmitHandler(handler) {
@@ -316,6 +322,30 @@ class EditEventForm extends AbstractSmartComponent {
   reset() {
     this._event = Object.assign({}, this._eventForReset);
     this.rerender();
+  }
+
+  setDisabled(isDisabled) {
+    this._element.querySelector(`.event__type-toggle`).disabled = isDisabled;
+    this._element.querySelector(`input[name=event-destination]`).disabled = isDisabled;
+    this._element.querySelector(`input[name=event-start-time]`).disabled = isDisabled;
+    this._element.querySelector(`input[name=event-end-time]`).disabled = isDisabled;
+    this._element.querySelector(`input[name=event-price]`).disabled = isDisabled;
+    this._element.querySelectorAll(`.event__offer-checkbox`).forEach((it) => {
+      it.disabled = isDisabled;
+    });
+    this._element.querySelector(`.event__save-btn`).disabled = isDisabled;
+    this._element.querySelector(`.event__reset-btn`).disabled = isDisabled;
+    if (this._mode === Mode.EDIT) {
+      this._element.querySelector(`.event__favorite-checkbox`).disabled = isDisabled;
+      this._element.querySelector(`.event__rollup-btn`).disabled = isDisabled;
+    }
+  }
+
+  setData(data) {
+    this._externalData = Object.assign({}, DefaultData, data);
+    this.rerender();
+    this.setDisabled(true);
+    this._element.classList.remove(ERROR_CLASS);
   }
 
   getFormData() {

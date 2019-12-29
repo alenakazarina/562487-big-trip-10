@@ -233,6 +233,9 @@ class TripController {
       this._api.deletePoint(oldEvent.id).then(() => {
         this._removePoint(pointController, oldEvent.id);
         return;
+      })
+      .catch(() => {
+        pointController.shake();
       });
     }
 
@@ -241,11 +244,17 @@ class TripController {
         this._pointsModel.addPoint(point);
         this._onViewChange();
         return;
+      })
+      .catch(() => {
+        pointController.shake();
       });
     }
     if (newEvent && oldEvent) {
       this._api.updatePoint(oldEvent.id, newEvent).then((point) => {
         this._pointsModel.updatePoint(point.id, point);
+        pointController.setDefaultView();
+      }).catch(() => {
+        pointController.shake();
       });
     }
   }
