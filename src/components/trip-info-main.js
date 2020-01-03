@@ -21,9 +21,10 @@ const createDatesTemplate = (events) => {
 
 const createTitlesTemplate = (events) => {
   const titles = Array.from(getUnique(events.map((it) => it.destination.name)));
-  return titles.length <= 2 ?
-    titles.join(`&mdash;`) :
-    `${titles[0]} &mdash; ... &mdash; ${titles[titles.length - 1]}`;
+
+  return titles.length <= 3 ?
+    titles.join(`&nbsp;&mdash;&nbsp;`) :
+    `${titles[0]}&nbsp;&mdash; ... &mdash;&nbsp; ${titles[titles.length - 1]}`;
 };
 
 const createTripInfoMainTemplate = (events) => {
@@ -56,30 +57,6 @@ class TripInfoMain extends AbstractComponent {
 
   getTemplate() {
     return createTripInfoMainTemplate(this._events);
-  }
-
-  update(events) {
-    this._events = events;
-    this._updateInfoTitle(events);
-    this._updateInfoDates(events);
-  }
-
-  _updateInfoTitle(events) {
-    if (events.length === 0) {
-      this.getElement().querySelector(`.trip-info__title`).innerHTML = ``;
-      return;
-    }
-    const datesTemplate = createTitlesTemplate(sortByStartDate(events));
-    this.getElement().querySelector(`.trip-info__title`).innerHTML = datesTemplate;
-  }
-
-  _updateInfoDates(events) {
-    if (events.length === 0) {
-      this.getElement().querySelector(`.trip-info__dates`).innerHTML = ``;
-      return;
-    }
-    const titlesTemplate = createDatesTemplate(sortByStartDate(events));
-    this.getElement().querySelector(`.trip-info__dates`).innerHTML = titlesTemplate;
   }
 }
 

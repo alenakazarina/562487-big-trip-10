@@ -8,15 +8,35 @@ import {render} from './utils/render';
 import {MenuTab} from './const';
 
 import API from './api';
+import APIWithProvider from './api/provider';
+import Store from './api/store';
 
-const AUTHORIZATION = `Basic jILdjsLoPPAzd29yZAo=`;
+
+const AUTHORIZATION = `Basic jVVsakSkSHAzd29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
+const StoreName = {
+  POINTS: `bigtrip-points`,
+  DESTINATIONS: `bigtrip-destinations`,
+  OFFERS: `bigtrip-offers`,
+};
+
+window.addEventListener(`load`, () => {
+  navigator.serviceWorker.register(`/sw.js`)
+    .then(() => {
+      // console.log(`Service Worker registration success`);
+    })
+    .catch(() => {
+      // console.log(`Service Worker registration failed: `, err);
+    });
+});
 
 const api = new API(END_POINT, AUTHORIZATION);
+const store = new Store(StoreName, window.localStorage);
+const apiWithProvider = new APIWithProvider(api, store);
+
 const pointsModel = new PointsModel();
 
 const tripMainElement = document.querySelector(`.trip-main`);
-
 const menuComponent = new MenuComponent();
 render(tripMainElement.children[1], menuComponent.getElement());
 
@@ -26,7 +46,7 @@ tripInfoController.render();
 const filtersController = new FiltersController(tripMainElement.children[1], pointsModel);
 filtersController.render();
 
-const tripController = new TripController(document.querySelector(`.trip-events`), pointsModel, api);
+const tripController = new TripController(document.querySelector(`.trip-events`), pointsModel, apiWithProvider);
 tripController.render();
 
 const statisticsComponent = new StatisticsComponent(pointsModel);
@@ -42,5 +62,23 @@ menuComponent.setClickHandler((evt) => {
     tripController.hide();
     statisticsComponent.show();
   }
+});
+
+window.addEventListener(`online`, () => {
+  document.title = document.title.replace(` [offline]`, ``);
+
+  if (!apiWithProvider.getSynchronize()) {
+    apiWithProvider.sync()
+      .then(() => {
+        // console.log(`sync success`);
+      })
+      .catch(() => {
+        // console.log(`sync error `, err);
+      });
+  }
+});
+
+window.addEventListener(`offline`, () => {
+  document.title += ` [offline]`;
 });
 
