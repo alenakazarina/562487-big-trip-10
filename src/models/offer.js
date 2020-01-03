@@ -4,6 +4,13 @@ class Offer {
     this.offers = data[`offers`];
   }
 
+  toRAW() {
+    return {
+      'type': this.type,
+      'offers': this.offers
+    };
+  }
+
   static parseOffer(data) {
     return new Offer(data);
   }
