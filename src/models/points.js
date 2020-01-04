@@ -1,5 +1,5 @@
 import {FilterType, SortType} from '../const';
-import {getUniqueDays, getDatesDiff, calculateSum} from '../utils/common';
+import {isSameDay, getUniqueDays, getDatesDiff, calculateSum} from '../utils/common';
 
 const getSortedPoints = (points, sortType) => {
   switch (sortType) {
@@ -51,16 +51,20 @@ class Points {
     return getSortedPoints(getPointsByFilter(this._points, this._activeFilterType), this._activeSortType);
   }
 
-  getPointsDates(points = this._points) {
-    if (!points.length) {
-      return [];
-    }
-    const startDates = points.map((point) => point.startDate).sort((a, b) => getDatesDiff(a, b));
-    return getUniqueDays(startDates);
+  getPointsAll() {
+    return this._points;
   }
 
-  getPointsLength() {
-    return this._points.length;
+  getDays() {
+    if (!this._points.length) {
+      return [];
+    }
+    const events = this.getPoints();
+    const eventsDates = this._getPointsDates();
+    return this._activeSortType === SortType.EVENT ?
+      eventsDates
+        .map((day) => events.filter((event) => isSameDay(event.startDate, day)))
+        .filter((it) => it.length) : [events];
   }
 
   getCostsAmount() {
@@ -75,15 +79,15 @@ class Points {
     }
     this._points = points
       .map((point) => Object.assign({}, point, {startDate: point.startDate}, {endDate: point.endDate}))
-      .sort((a, b) => getDatesDiff(a.startDate, b.startDate) > 0);
+      .sort((a, b) => getDatesDiff(a.startDate, b.startDate));
 
-    this._pointsDates = this.getPointsDates();
-    this._callHandlers([this._dataChangeHandlers[0]]);
+    this._pointsDates = this._getPointsDates();
+    this._callHandlers(this._dataChangeHandlers.slice(0, 2));
   }
 
   addPoint(point) {
     this._points = [].concat(point, this._points);
-    this._pointsDates = this.getPointsDates();
+    this._pointsDates = this._getPointsDates();
     this._callHandlers(this._dataChangeHandlers);
   }
 
@@ -94,7 +98,7 @@ class Points {
     }
 
     this._points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));
-    this._pointsDates = this.getPointsDates();
+    this._pointsDates = this._getPointsDates();
     this._callHandlers(this._dataChangeHandlers);
     return true;
   }
@@ -107,6 +111,10 @@ class Points {
     this._points[index] = Object.assign({}, newPoint);
     this._callHandlers(this._dataChangeHandlers);
     return true;
+  }
+
+  getPointsByFilter(filterType) {
+    return getPointsByFilter(this._points, filterType);
   }
 
   setFilter(filterType) {
@@ -134,6 +142,11 @@ class Points {
 
   _callHandlers(handlers) {
     handlers.forEach((handler) => handler());
+  }
+
+  _getPointsDates() {
+    const startDates = this._points.map((point) => point.startDate).sort((a, b) => getDatesDiff(a, b));
+    return getUniqueDays(startDates);
   }
 
   _getPointById(id) {

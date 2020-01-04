@@ -292,7 +292,7 @@ class Statistics extends AbstractSmartComponent {
   constructor(pointsModel) {
     super();
     this._pointsModel = pointsModel;
-    this._points = pointsModel.getPoints();
+    this._points = pointsModel.getPointsAll();
 
     this._moneyChart = null;
     this._transportChart = null;
@@ -308,7 +308,7 @@ class Statistics extends AbstractSmartComponent {
   show() {
     super.show();
 
-    this.rerender(this._pointsModel.getPoints());
+    this.rerender(this._pointsModel.getPointsAll());
   }
 
   recoveryListeners() {}

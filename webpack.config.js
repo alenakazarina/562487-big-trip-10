@@ -6,7 +6,7 @@ module.exports = {
   mode: `development`,
   entry: `./src/main.js`,
   output: {
-    filename: `bundle.[contenthash].js`,
+    filename: `bundle.js`,
     path: path.join(__dirname, `public`)
   },
   module: {
