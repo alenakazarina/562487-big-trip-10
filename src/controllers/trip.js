@@ -92,6 +92,7 @@ class TripController {
     this._tripDaysListComponent = new TripDaysListComponent(days, this._sortType);
     render(this._container, this._tripDaysListComponent.getElement());
 
+    this._pointControllers.forEach((it) => it.destroy());
     this._pointControllers = days.map((day, i) => {
       const container = this._tripDaysListComponent.getElement().querySelectorAll(`.trip-days__item`)[i].querySelector(`.trip-events__list`);
       return this._renderEvents(day, container);
@@ -135,7 +136,6 @@ class TripController {
 
   _createAddEventForm() {
     this._onViewChange();
-    this._pointControllers.forEach((it) => it.setOpenButton(true));
     this._noPointsComponent.hide();
 
     this._addEventButtonComponent.setDisabled(true);
@@ -168,11 +168,6 @@ class TripController {
     this._sortComponent.hide();
     this._noPointsComponent.setMessage(text);
     this._noPointsComponent.show();
-  }
-
-  _removePointControllers() {
-    this._pointControllers.forEach((pointController) => pointController.destroy());
-    this._pointControllers = [];
   }
 
   _removePointController(pointController, i) {
@@ -217,8 +212,8 @@ class TripController {
 
     if (oldEvent === null) {
       this._api.createPoint(newEvent).then((point) => {
-        this._pointsModel.addPoint(point);
         this._onViewChange();
+        this._pointsModel.addPoint(point);
       })
       .catch(() => {
         pointController.shake();
@@ -228,7 +223,7 @@ class TripController {
     if (newEvent && oldEvent) {
       this._api.updatePoint(oldEvent.id, newEvent).then((point) => {
         this._pointsModel.updatePoint(point.id, point);
-        pointController.setDefaultView();
+        this._onViewChange();
       }).catch(() => {
         pointController.shake();
       });
@@ -239,9 +234,7 @@ class TripController {
     this._pointControllers.forEach((it) => it.setDefaultView());
     if (this._addEventFormController) {
       this._addEventButtonComponent.setDisabled(false);
-      document.removeEventListener(`keydown`, this._addEventFormController._onEscKeyPress);
       this._addEventFormController.destroy();
-      this._pointControllers.forEach((it) => it.setOpenButton(false));
       if (this._pointsModel.getPointsAll().length === 0) {
         this._showMessage(Message.NO_POINTS);
       }
