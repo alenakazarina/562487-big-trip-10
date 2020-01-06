@@ -1,11 +1,13 @@
 import {render, replace} from '../utils/render';
 import EventComponent from '../components/event';
 import EditEventComponent from '../components/edit-event-form';
+import {debounce} from '../components/debounce';
 import {ERROR_CLASS, Mode} from '../const';
 import {remove} from '../utils/render';
 import PointModel from '../models/point';
 
 const SHAKE_ANIMATION_TIMEOUT = 600;
+const DEBOUNCE_TIMEOUT = 500;
 
 const getDefaultEvent = (newEventId) => {
   return ({
@@ -59,6 +61,7 @@ class PointController {
       this._addEventFormComponent = new EditEventComponent(this._event, destinations, offers, Mode.ADD);
 
       this._setAddEventFormHandlers();
+      document.addEventListener(`keydown`, this._onEscKeyPress);
 
       this._container.insertBefore(this._addEventFormComponent.getElement(this._event), this._container.lastElementChild);
       return;
@@ -87,25 +90,20 @@ class PointController {
     }
   }
 
-  setOpenButton(value) {
-    this._eventComponent.getElement().querySelector(`.event__rollup-btn`).disabled = value;
-  }
-
   getContainer() {
     return this._container;
   }
 
   destroy() {
-    if (this._mode === Mode.EDIT) {
-      remove(this._editEventComponent);
-      remove(this._eventComponent);
-      document.removeEventListener(`keydown`, this._onEscKeyDown);
-    }
-
+    document.removeEventListener(`keydown`, this._onEscKeyPress);
     if (this._mode === Mode.ADD) {
+      this._addEventFormComponent.removeFlatpickr();
       remove(this._addEventFormComponent);
-      document.removeEventListener(`keydown`, this._onEscKeyDown);
+      return;
     }
+    this._editEventComponent.removeFlatpickr();
+    remove(this._editEventComponent);
+    remove(this._eventComponent);
   }
 
   shake() {
@@ -132,8 +130,6 @@ class PointController {
     if (evt.key === `Escape` || evt.key === `Esc`) {
       if (this._mode === Mode.ADD) {
         this._onViewChange();
-        remove(this._addEventFormComponent);
-        document.removeEventListener(`keydown`, this._onEscKeyPress);
         return;
       }
       this._replaceFormToEvent();
@@ -156,6 +152,15 @@ class PointController {
 
   _setHandlers() {
     this._eventComponent.setClickHandler(() => this._replaceEventToForm());
+
+    this._editEventComponent.setFavoriteButtonClickHandler((evt) => {
+      evt.target.disabled = true;
+      const newPoint = parseFormData(this._event);
+      newPoint.isFavorite = !newPoint.isFavorite;
+      debounce(() => {
+        this._onDataChange(this, this._event, newPoint);
+      }, DEBOUNCE_TIMEOUT)();
+    });
 
     this._editEventComponent.setCloseButtonClickHandler(() => {
       this._editEventComponent.reset();
@@ -186,17 +191,15 @@ class PointController {
       evt.preventDefault();
       const data = this._addEventFormComponent.getFormData();
       const formData = parseFormData(data);
-      document.removeEventListener(`keydown`, this._onEscKeyPress);
       this._addEventFormComponent.setData({
         saveButtonText: `Saving...`,
       });
       this._onDataChange(this, null, formData);
     });
+
     this._addEventFormComponent.setDeleteClickHandler(() => {
-      document.removeEventListener(`keydown`, this._onEscKeyPress);
       this._onViewChange();
     });
-    document.addEventListener(`keydown`, this._onEscKeyPress);
   }
 }
 
