@@ -22,7 +22,7 @@ const createSortFitlerTemplate = (sortType, isChecked) => {
         value="sort-${sortType}"
         data-sort-type="${sortType}"
         ${isChecked ? `checked` : ``}>
-      <label class="trip-sort__btn" for="sort-${sortType}">${sortType} ${directionIcon}</label>
+      <label class="trip-sort__btn trip-sort__btn--by-decrease" for="sort-${sortType}">${sortType} ${directionIcon}</label>
     </div>
   `;
 };

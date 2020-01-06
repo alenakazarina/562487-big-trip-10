@@ -1,4 +1,5 @@
 import AbstractSmartComponent from './abstract-smart-component';
+
 import {
   formatTimeWithSlashes, parseDateWithSlashes, getDatesDiff, getIcon, getEventType, capitalizeFirstLetter, hasSameTitle} from '../utils/common';
 import {ERROR_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
@@ -58,7 +59,6 @@ const createOfferSelector = (id, type, offer, isChecked) => {
   `;
 };
 
-//  отбирает по title с подменой
 const getShowedOffers = (offers, availableOffers) => {
   return availableOffers.map((availableOffer) => {
 
@@ -271,10 +271,14 @@ class EditEventForm extends AbstractSmartComponent {
     this._submitHandler = null;
     this._deleteHandler = null;
     this._resetHandler = null;
-    this._flatpickr = null;
+    this._flatpickr = {
+      START: null,
+      END: null
+    };
 
     this._applyFlatpickr();
     this._subscribeOnEvents();
+    this._removeFlatpickr = this.removeFlatpickr.bind(this);
   }
 
   getTemplate() {
@@ -300,15 +304,26 @@ class EditEventForm extends AbstractSmartComponent {
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
   }
 
+  setFavoriteButtonClickHandler(handler) {
+    this._favoriteHandler = handler;
+    this.getElement().querySelector(`.event__favorite-checkbox`).addEventListener(`change`, this._favoriteHandler);
+  }
+
+  removeFavoriteButtonClickHandler() {
+    this.getElement().querySelector(`.event__favorite-checkbox`).removeEventListener(`change`, this._favoriteHandler);
+  }
+
   recoveryListeners() {
     if (this._mode === Mode.EDIT) {
+      this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
       this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
+      this.getElement().querySelector(`.event__favorite-btn`).addEventListener(`click`, this._favoriteHandler);
     }
+
     if (this._mode === Mode.ADD) {
       this.getElement().addEventListener(`submit`, this._submitHandler);
-    } else {
-      this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
     }
+
     this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, this._deleteHandler);
     this._setValidation();
     this._subscribeOnEvents();
@@ -380,12 +395,6 @@ class EditEventForm extends AbstractSmartComponent {
   _subscribeOnEvents() {
     const element = this.getElement();
 
-    if (this._mode === Mode.EDIT) {
-      element.querySelector(`.event__favorite-checkbox`).addEventListener(`change`, () => {
-        this._event = Object.assign({}, this._event, {isFavorite: !this._event.isFavorite});
-      });
-    }
-
     element.querySelector(`.event__type-list`).addEventListener(`change`, (evt) => {
       const inputValue = evt.target.value;
       this._availableOffers = this._offers.find((it) => it.type === inputValue).offers;
@@ -439,28 +448,35 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   _applyFlatpickr() {
-    if (this._flatpickr) {
-      Object.values(this._flatpickr).forEach((it) => it.destroy());
-      this._flatpickr = null;
+    if (this._flatpickr.START && this._flatpickr.END) {
+      this._flatpickr.START.destroy();
+      this._flatpickr.END.destroy();
+      this._flatpickr.START = null;
+      this._flatpickr.END = null;
     }
 
     const [startDateInput, endDateInput] = Array.from(this.getElement().querySelectorAll(`.event__input--time`));
 
-    this._flatpickr = Object.assign({}, {START: {}, END: {}});
+    this._flatpickr.START = this._createFlatpickrInput(startDateInput, this._event.startDate);
+    this._flatpickr.END = this._createFlatpickrInput(endDateInput, this._event.endDate);
+  }
 
-    this._flatpickr.START = flatpickr(startDateInput, {
+  _createFlatpickrInput(node, date) {
+    return flatpickr(node, {
       enableTime: true,
       allowInput: true,
-      defaultDate: this._event.startDate,
+      defaultDate: date,
       formatDate: formatTimeWithSlashes
     });
+  }
 
-    this._flatpickr.END = flatpickr(endDateInput, {
-      enableTime: true,
-      allowInput: true,
-      defaultDate: this._event.endDate,
-      formatDate: formatTimeWithSlashes
-    });
+  removeFlatpickr() {
+    if (this._flatpickr.START && this._flatpickr.END) {
+      this._flatpickr.START.destroy();
+      this._flatpickr.END.destroy();
+      this._flatpickr.START = null;
+      this._flatpickr.END = null;
+    }
   }
 }
 
