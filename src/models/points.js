@@ -85,6 +85,20 @@ class Points {
     this._callHandlers(this._dataChangeHandlers.slice(0, 2));
   }
 
+  syncPoints(points) {
+    if (points.length === 0) {
+      this._points = [];
+      this._pointsDates = [];
+      return;
+    }
+    this._points = points
+      .map((point) => Object.assign({}, point, {startDate: point.startDate}, {endDate: point.endDate}))
+      .sort((a, b) => getDatesDiff(a.startDate, b.startDate));
+
+    this._pointsDates = this._getPointsDates();
+    this._callHandlers(this._dataChangeHandlers);
+  }
+
   addPoint(point) {
     this._points = [].concat(point, this._points);
     this._pointsDates = this._getPointsDates();

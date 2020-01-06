@@ -1,5 +1,6 @@
 import MenuComponent from './components/menu';
 import StatisticsComponent from './components/statistics';
+import Modal from './components/modal';
 import TripInfoController from './controllers/trip-info';
 import TripController from './controllers/trip';
 import FiltersController from './controllers/filters';
@@ -12,7 +13,7 @@ import APIWithProvider from './api/provider';
 import Store from './api/store';
 
 
-const AUTHORIZATION = `Basic jVVsakSkSHAzd29yZAo=`;
+const AUTHORIZATION = `Basic jVVsfsSyKSAzd29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
 const StoreName = {
   POINTS: `bigtrip-points`,
@@ -69,11 +70,13 @@ window.addEventListener(`online`, () => {
 
   if (!apiWithProvider.getSynchronize()) {
     apiWithProvider.sync()
-      .then(() => {
-        // console.log(`sync success`);
+      .then((points) => {
+        pointsModel.syncPoints(points);
       })
       .catch(() => {
-        // console.log(`sync error `, err);
+        const modalComponent = new Modal();
+        render(document.body, modalComponent.getElement());
+        modalComponent.show();
       });
   }
 });
