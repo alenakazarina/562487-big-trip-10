@@ -14,25 +14,19 @@ const createSortFitlerTemplate = (sortType, isChecked) => {
 
   return `
     <div class="trip-sort__item  trip-sort__item--${sortType}">
-      <input
-        id="sort-${sortType}"
-        class="trip-sort__input  visually-hidden"
-        type="radio"
-        name="trip-sort"
-        value="sort-${sortType}"
-        data-sort-type="${sortType}"
-        ${isChecked ? `checked` : ``}>
-      <label class="trip-sort__btn" for="sort-${sortType}">${sortType} ${directionIcon}</label>
+      <input id="sort-${sortType}" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-${sortType}" data-sort-type="${sortType}" ${isChecked ? `checked` : ``}>
+      <label class="trip-sort__btn trip-sort__btn--by-decrease" for="sort-${sortType}">${sortType} ${directionIcon}</label>
     </div>
   `;
 };
 
-const createSortTemplate = () => {
+const createSortTemplate = (activeSortType) => {
+  const isDayShowed = activeSortType === SortType.EVENT ? `Day` : ``;
   const sortFitlersTemplate = Object.values(SortType).map((sortType) => createSortFitlerTemplate(sortType, sortType === SortType.EVENT)).join(`\n`);
 
   return `
     <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
-      <span class="trip-sort__item  trip-sort__item--day">Day</span>
+      <span class="trip-sort__item  trip-sort__item--day">${isDayShowed}</span>
       ${sortFitlersTemplate}
       <span class="trip-sort__item  trip-sort__item--offers">Offers</span>
     </form>
@@ -46,7 +40,7 @@ class Sort extends AbstractComponent {
   }
 
   getTemplate() {
-    return createSortTemplate();
+    return createSortTemplate(this._active);
   }
 
   setSortTypeChangeHandler(handler) {

@@ -47,12 +47,12 @@ class Points {
     this._sortTypeChangeHandlers = [];
   }
 
-  getPoints() {
-    return getSortedPoints(getPointsByFilter(this._points, this._activeFilterType), this._activeSortType);
-  }
-
   getPointsAll() {
     return this._points;
+  }
+
+  getPoints() {
+    return getSortedPoints(getPointsByFilter(this._points, this._activeFilterType), this._activeSortType);
   }
 
   getDays() {
@@ -74,20 +74,17 @@ class Points {
   setPoints(points) {
     if (points.length === 0) {
       this._points = [];
-      this._pointsDates = [];
       return;
     }
     this._points = points
       .map((point) => Object.assign({}, point, {startDate: point.startDate}, {endDate: point.endDate}))
       .sort((a, b) => getDatesDiff(a.startDate, b.startDate));
 
-    this._pointsDates = this._getPointsDates();
-    this._callHandlers(this._dataChangeHandlers.slice(0, 2));
+    this._callHandlers(this._dataChangeHandlers);
   }
 
   addPoint(point) {
     this._points = [].concat(point, this._points);
-    this._pointsDates = this._getPointsDates();
     this._callHandlers(this._dataChangeHandlers);
   }
 
@@ -98,7 +95,6 @@ class Points {
     }
 
     this._points = [].concat(this._points.slice(0, index), this._points.slice(index + 1));
-    this._pointsDates = this._getPointsDates();
     this._callHandlers(this._dataChangeHandlers);
     return true;
   }
@@ -123,9 +119,7 @@ class Points {
   }
 
   setSort(sortType) {
-    if (Object.values(SortType).some((it) => it === sortType)) {
-      this._activeSortType = sortType;
-    }
+    this._activeSortType = sortType;
   }
 
   addDataChangeHandler(handler) {
@@ -134,10 +128,6 @@ class Points {
 
   addFilterChangeHandler(handler) {
     this._filterChangeHandlers.push(handler);
-  }
-
-  addSortTypeChangeHandler(handler) {
-    this._sortTypeChangeHandlers.push(handler);
   }
 
   _callHandlers(handlers) {

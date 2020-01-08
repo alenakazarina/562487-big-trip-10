@@ -33,14 +33,6 @@ class Menu extends AbstractComponent {
     return createMenuTemplate(this._active);
   }
 
-  setClickHandler(handler) {
-    this._tableTab = this._element.children[0];
-    this._statsTab = this._element.children[1];
-    this.getElement().querySelectorAll(`.trip-tabs__btn`).forEach((tab) => {
-      tab.addEventListener(`click`, handler);
-    });
-  }
-
   setActiveTab(active) {
     if (active.value === this._active) {
       return;
@@ -48,6 +40,14 @@ class Menu extends AbstractComponent {
     this._element.querySelector(`.${ACTIVE_TAB_CLASS}`).classList.remove(ACTIVE_TAB_CLASS);
     active.classList.add(ACTIVE_TAB_CLASS);
     this._active = active.value;
+  }
+
+  setClickHandler(handler) {
+    this._tableTab = this._element.children[0];
+    this._statsTab = this._element.children[1];
+    this.getElement().querySelectorAll(`.trip-tabs__btn`).forEach((tab) => {
+      tab.addEventListener(`click`, handler);
+    });
   }
 }
 

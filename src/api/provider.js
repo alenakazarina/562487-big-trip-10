@@ -99,14 +99,18 @@ class Provider {
             this._store.removePoint(point.id);
           });
 
-          const createdPoints = getSyncedItems(response.created);
+          const createdPoints = response.created.map((point) => {
+            point.offline = false;
+            return point;
+          });
           const updatedPoints = getSyncedItems(response.updated);
           [...createdPoints, ...updatedPoints].forEach((point) => {
             this._store.setPoint(point.id, point);
           });
 
+          const points = Object.values(this._store.getPoints());
           this._isSynchronized = true;
-          return Promise.resolve();
+          return Promise.resolve(Point.parsePoints(points));
         });
     }
 

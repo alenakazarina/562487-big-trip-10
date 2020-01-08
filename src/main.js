@@ -1,5 +1,6 @@
 import MenuComponent from './components/menu';
 import StatisticsComponent from './components/statistics';
+import Modal from './components/modal';
 import TripInfoController from './controllers/trip-info';
 import TripController from './controllers/trip';
 import FiltersController from './controllers/filters';
@@ -12,8 +13,9 @@ import APIWithProvider from './api/provider';
 import Store from './api/store';
 
 
-const AUTHORIZATION = `Basic jVVsakSkSHAzd29yZAo=`;
+const AUTHORIZATION = `Basic jVVsagSyGXApa29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
+const RELOAD_TIMEOUT = 8000;
 const StoreName = {
   POINTS: `bigtrip-points`,
   DESTINATIONS: `bigtrip-destinations`,
@@ -21,13 +23,7 @@ const StoreName = {
 };
 
 window.addEventListener(`load`, () => {
-  navigator.serviceWorker.register(`/sw.js`)
-    .then(() => {
-      // console.log(`Service Worker registration success`);
-    })
-    .catch(() => {
-      // console.log(`Service Worker registration failed: `, err);
-    });
+  navigator.serviceWorker.register(`/sw.js`);
 });
 
 const api = new API(END_POINT, AUTHORIZATION);
@@ -69,11 +65,14 @@ window.addEventListener(`online`, () => {
 
   if (!apiWithProvider.getSynchronize()) {
     apiWithProvider.sync()
-      .then(() => {
-        // console.log(`sync success`);
+      .then((points) => {
+        pointsModel.setPoints(points);
       })
       .catch(() => {
-        // console.log(`sync error `, err);
+        const modalComponent = new Modal();
+        render(document.body, modalComponent.getElement());
+        modalComponent.show();
+        setTimeout(() => location.reload(), RELOAD_TIMEOUT);
       });
   }
 });
