@@ -9,9 +9,9 @@ import PointModel from '../models/point';
 const SHAKE_ANIMATION_TIMEOUT = 600;
 const DEBOUNCE_TIMEOUT = 500;
 
-const getDefaultEvent = (newEventId) => {
-  return ({
-    id: newEventId,
+const getDefaultEvent = () => {
+  return {
+    id: Date.now(),
     type: `sightseeing`,
     startDate: new Date(),
     endDate: new Date(),
@@ -23,7 +23,7 @@ const getDefaultEvent = (newEventId) => {
     price: 0,
     offers: [],
     isFavorite: false
-  });
+  };
 };
 
 const parseFormData = (formData) => {
@@ -50,20 +50,21 @@ class PointController {
 
     this._onDataChange = onDataChange;
     this._onViewChange = onViewChange;
-
-    this._onEscKeyPress = this._onEscKeyPress.bind(this);
+    this._onEscKeyDown = this._onEscKeyDown.bind(this);
   }
 
-  render(id, event, destinations, offers, mode) {
+  getContainer() {
+    return this._container;
+  }
+
+  render(event, destinations, offers, mode) {
     this._mode = mode;
     if (this._mode === Mode.ADD) {
-      this._event = getDefaultEvent(id);
+      this._event = getDefaultEvent();
       this._addEventFormComponent = new EditEventComponent(this._event, destinations, offers, Mode.ADD);
-
       this._setAddEventFormHandlers();
-      document.addEventListener(`keydown`, this._onEscKeyPress);
-
-      this._container.insertBefore(this._addEventFormComponent.getElement(this._event), this._container.lastElementChild);
+      document.addEventListener(`keydown`, this._onEscKeyDown);
+      this._container.insertBefore(this._addEventFormComponent.getElement(), this._container.lastElementChild);
       return;
     }
 
@@ -90,12 +91,8 @@ class PointController {
     }
   }
 
-  getContainer() {
-    return this._container;
-  }
-
   destroy() {
-    document.removeEventListener(`keydown`, this._onEscKeyPress);
+    this.removeEscListener();
     if (this._mode === Mode.ADD) {
       this._addEventFormComponent.removeFlatpickr();
       remove(this._addEventFormComponent);
@@ -126,27 +123,21 @@ class PointController {
     form.setDisabled(false);
   }
 
-  _onEscKeyPress(evt) {
-    if (evt.key === `Escape` || evt.key === `Esc`) {
-      if (this._mode === Mode.ADD) {
-        this._onViewChange();
-        return;
-      }
-      this._replaceFormToEvent();
-    }
+  removeEscListener() {
+    document.removeEventListener(`keydown`, this._onEscKeyDown);
   }
 
   _replaceFormToEvent() {
     this._editEventComponent.reset();
     replace(this._eventComponent, this._editEventComponent);
-    document.removeEventListener(`keydown`, this._onEscKeyPress);
+    this.removeEscListener();
     this._mode = Mode.VIEW;
   }
 
   _replaceEventToForm() {
     this._onViewChange();
     replace(this._editEventComponent, this._eventComponent);
-    document.addEventListener(`keydown`, this._onEscKeyPress);
+    document.addEventListener(`keydown`, this._onEscKeyDown);
     this._mode = Mode.EDIT;
   }
 
@@ -181,7 +172,7 @@ class PointController {
       this._editEventComponent.setData({
         deleteButtonText: `Deleting...`,
       });
-      document.removeEventListener(`keydown`, this._onEscKeyPress);
+      this.removeEscListener();
       this._onDataChange(this, this._event, null);
     });
   }
@@ -200,6 +191,16 @@ class PointController {
     this._addEventFormComponent.setDeleteClickHandler(() => {
       this._onViewChange();
     });
+  }
+
+  _onEscKeyDown(evt) {
+    if (evt.key === `Escape` || evt.key === `Esc`) {
+      if (this._mode === Mode.ADD) {
+        this._onViewChange();
+        return;
+      }
+      this._replaceFormToEvent();
+    }
   }
 }
 

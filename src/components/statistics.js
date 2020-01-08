@@ -4,6 +4,8 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import {TRANSFER_EVENTS, ACTIVITY_EVENTS} from '../const';
 import {calculateSum, getDatesDiff, getEventType} from '../utils/common';
 
+const MS_IN_HOUR = 1000 * 3600;
+
 const EmojiValue = {
   TAXI: `🚕`,
   BUS: `🚌`,
@@ -24,28 +26,17 @@ const getNamesWithEmoji = (eventsNames) => {
   });
 };
 
-const convertMsToHours = (time) => Math.floor(time / (1000 * 3600));
+const convertMsToHours = (time) => Math.floor(time / MS_IN_HOUR);
 
-const getMoneyChartData = (points) => {
-  let costs = [];
-  const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
-  eventsNames.forEach((it, i) => {
-    costs[i] = calculateSum(points.filter((point) => point.type === it).map((point) => +point.price));
-  });
-  return [eventsNames, costs];
-};
-
-const renderMoneyChart = (moneyCtx, points) => {
-  const [eventsNames, costs] = getMoneyChartData(points);
-
-  return new Chart(moneyCtx, {
+const createChart = (ctx, chartText, chartLabels, chartData, chartFormatter) => {
+  return new Chart(ctx, {
     plugins: [ChartDataLabels],
     type: `horizontalBar`,
     data: {
-      labels: getNamesWithEmoji(eventsNames),
+      labels: getNamesWithEmoji(chartLabels),
       datasets: [
         {
-          data: costs,
+          data: chartData,
           minBarLength: 40,
           backgroundColor: `white`
         }
@@ -63,7 +54,7 @@ const renderMoneyChart = (moneyCtx, points) => {
           },
           textAlign: `center`,
           padding: 2,
-          formatter: (value) => `€ ${value}`
+          formatter: chartFormatter
         }
       },
       scales: {
@@ -86,7 +77,7 @@ const renderMoneyChart = (moneyCtx, points) => {
       title: {
         display: true,
         position: `left`,
-        text: `MONEY`,
+        text: chartText,
         fontSize: 24,
         fontColor: `#000000`
       },
@@ -98,6 +89,21 @@ const renderMoneyChart = (moneyCtx, points) => {
       }
     }
   });
+};
+
+const getMoneyChartData = (points) => {
+  const costs = [];
+  const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
+  eventsNames.forEach((it, i) => {
+    costs[i] = calculateSum(points.filter((point) => point.type === it).map((point) => +point.price));
+  });
+  return [eventsNames, costs];
+};
+
+const renderMoneyChart = (moneyCtx, points) => {
+  const [eventsNames, costs] = getMoneyChartData(points);
+  const getFormat = (value) => `€ ${value}`;
+  return createChart(moneyCtx, `MONEY`, eventsNames, costs, getFormat);
 };
 
 const getTransportChartData = (points) => {
@@ -117,144 +123,24 @@ const renderTransportChart = (transportCtx, points) => {
     eventsNames = TRANSFER_EVENTS;
     eventsCounts = TRANSFER_EVENTS.map(() => 0);
   }
-
-  return new Chart(transportCtx, {
-    plugins: [ChartDataLabels],
-    type: `horizontalBar`,
-    data: {
-      labels: getNamesWithEmoji(eventsNames),
-      datasets: [
-        {
-          data: eventsCounts,
-          minBarLength: 40,
-          backgroundColor: `white`
-        }
-      ]
-    },
-    options: {
-      plugins: {
-        datalabels: {
-          color: `black`,
-          clamp: true,
-          anchor: `end`,
-          align: `left`,
-          font: {
-            size: 14
-          },
-          textAlign: `center`,
-          padding: 2,
-          formatter: (value) => `${value}x`
-        }
-      },
-      scales: {
-        xAxes: [{
-          display: false,
-          ticks: {
-            suggestedMin: 0
-          }
-        }],
-        yAxes: [{
-          gridLines: {
-            display: false,
-            color: `red`
-          },
-          ticks: {
-            fontSize: 16
-          }
-        }],
-      },
-      title: {
-        display: true,
-        position: `left`,
-        text: `TRANSPORT`,
-        fontSize: 24,
-        fontColor: `#000000`
-      },
-      legend: {
-        display: false
-      },
-      tooltips: {
-        enabled: false
-      }
-    }
-  });
+  const getFormat = (value) => `${value}x`;
+  return createChart(transportCtx, `TRANSPORT`, eventsNames, eventsCounts, getFormat);
 };
 
 const getTimeChartData = (points) => {
-  let eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
-  let durations = [];
+  const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
+  const durations = [];
   eventsNames.forEach((it, i) => {
     durations[i] = points.filter((point) => point.type === it)
       .map((point) => getDatesDiff(point.endDate, point.startDate));
   });
-  durations = durations.map((it) => convertMsToHours(calculateSum(it)));
-  return [eventsNames, durations];
+  return [eventsNames, durations.map((it) => convertMsToHours(calculateSum(it)))];
 };
 
 const renderTimeChart = (timeCtx, points) => {
   const [eventsNames, durations] = getTimeChartData(points);
-  return new Chart(timeCtx, {
-    plugins: [ChartDataLabels],
-    type: `horizontalBar`,
-    data: {
-      labels: getNamesWithEmoji(eventsNames),
-      datasets: [
-        {
-          data: durations,
-          minBarLength: 40,
-          backgroundColor: `white`
-        }
-      ]
-    },
-    options: {
-      plugins: {
-        datalabels: {
-          color: `black`,
-          clamp: true,
-          anchor: `end`,
-          align: `left`,
-          font: {
-            size: 14
-          },
-          textAlign: `center`,
-          padding: 2,
-          formatter: (value) => {
-            return value === 0 ? `< 1H` : `${value}H`;
-          }
-        }
-      },
-      scales: {
-        xAxes: [{
-          display: false,
-          ticks: {
-            suggestedMin: 0
-          }
-        }],
-        yAxes: [{
-          gridLines: {
-            display: false,
-            color: `red`
-          },
-          ticks: {
-            fontSize: 16
-          }
-        }],
-      },
-      title: {
-        display: true,
-        position: `left`,
-        text: `TIME SPENT`,
-        fontSize: 24,
-        fontColor: `#000000`
-      },
-      legend: {
-        display: false
-      },
-      tooltips: {
-        enabled: false
-      }
-    }
-  });
+  const getFormat = (value) => value === 0 ? `< 1H` : `${value}H`;
+  return createChart(timeCtx, `TIME SPENT`, eventsNames, durations, getFormat);
 };
 
 const createStatisticsTemplate = (points) => {
@@ -269,17 +155,14 @@ const createStatisticsTemplate = (points) => {
   return `
     <section class="statistics">
       <h2 class="visually-hidden">Trip statistics</h2>
-
       <div class="statistics__item statistics__item--money">
         <h3 class="visually-hidden">Money chart</h3>
         <canvas class="statistics__chart  statistics__chart--money" width="900" role="img" aria-label="${ariaLabelForMoneyChart}"></canvas>
       </div>
-
       <div class="statistics__item statistics__item--transport">
         <h3 class="visually-hidden">Transport chart</h3>
         <canvas class="statistics__chart  statistics__chart--transport" width="900" role="img" aria-label="${ariaLabelForTransportChart}"></canvas>
       </div>
-
       <div class="statistics__item statistics__item--time-spent">
         <h3 class="visually-hidden">Time spent chart</h3>
         <canvas class="statistics__chart  statistics__chart--time" width="900" role="img" aria-label="${ariaLabelForTimeChart}"></canvas>
@@ -293,7 +176,6 @@ class Statistics extends AbstractSmartComponent {
     super();
     this._pointsModel = pointsModel;
     this._points = pointsModel.getPointsAll();
-
     this._moneyChart = null;
     this._transportChart = null;
     this._timeChart = null;
@@ -305,18 +187,17 @@ class Statistics extends AbstractSmartComponent {
     return createStatisticsTemplate(this._points);
   }
 
-  show() {
-    super.show();
-
-    this.rerender(this._pointsModel.getPointsAll());
-  }
-
   recoveryListeners() {}
 
   rerender(points) {
     this._points = points;
     super.rerender();
     this._renderCharts();
+  }
+
+  show() {
+    super.show();
+    this.rerender(this._pointsModel.getPointsAll());
   }
 
   _renderCharts() {

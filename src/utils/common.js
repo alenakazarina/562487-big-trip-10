@@ -1,6 +1,8 @@
 import {ICON_PATHS, ACTIVITY_EVENTS} from '../const';
 import moment from 'moment';
 
+const MSEC_IN_DAY = 1000 * 3600 * 24;
+
 const calculateSum = (items) => items.reduce((acc, it) => {
   return it + acc;
 }, 0);
@@ -14,7 +16,7 @@ const isSameMonth = (a, b) => {
 };
 
 const getUniqueDays = (days) => {
-  let uniqueDays = [];
+  const uniqueDays = [];
   days.forEach((day, i) => {
     if (i === 0 || uniqueDays.every((it) => isSameDay(it, day) === false)) {
       uniqueDays.push(day);
@@ -32,64 +34,40 @@ const formatMonthDay = (date) => {
 };
 
 const formatTimeWithSlashes = (date) => {
-  return `${moment(date).format(`DD/MM/YY hh:mm`)}`;
+  return `${moment(date).format(`DD/MM/YY H:mm`)}`;
 };
 
-const parseDateFromISOString = (date) => {
+const parseDate = (date) => {
   return moment(date).format();
-};
-
-const parseDateWithSlashes = (dateString) => {
-  const [date, time] = dateString.split(` `);
-  const [day, month, year] = date.split(`/`);
-  return new Date(moment(`${day}-${month}-${year} ${time}`, `DD-MM-YY hh:mm`).format()).toISOString();
 };
 
 const formatDatetime = (date) => {
   return `${moment(date).format(`YYYY-MM-DD`)}`;
 };
 
-const formatFullDatetime = (date) => {
-  return moment(date).format(moment.HTML5_FMT.DATETIME_LOCAL);
-};
-
 const getDuration = (startDate, endDate) => {
   const duration = moment.duration(moment(endDate).diff(moment(startDate)));
-
-  const durationDays = duration.get(`days`) ? `${duration.get(`days`)}D` : ``;
+  const daysCount = Math.floor(duration._milliseconds / MSEC_IN_DAY);
+  const durationDays = daysCount ? `${daysCount}D` : ``;
   const durationHours = (durationDays || duration.get(`hours`)) ? `${duration.get(`hours`)}H` : ``;
   const durationMinutes = (durationHours || duration.get(`minutes`)) ? `${duration.get(`minutes`)}M` : ``;
 
-  return {
-    days: durationDays,
-    hours: durationHours,
-    minutes: durationMinutes
-  };
+  if (!durationDays && !durationHours && !durationMinutes) {
+    return `0M`;
+  }
+
+  return `${durationDays} ${durationHours} ${durationMinutes}`;
 };
 
 const getDatetime = (date) => {
   return {
-    datetime: formatFullDatetime(date),
+    datetime: date,
     time: moment(date).format(`hh:mm`)
   };
 };
 
 const getWeekDay = (date) => {
   return moment(date).format(`ddd DD`);
-};
-
-const getRandomArrayItem = (array) => {
-  const randomIndex = getRandomIntegerNumber(0, array.length);
-  return array[randomIndex];
-};
-
-const getRandomIntegerNumber = (min, max) => {
-  return min + Math.floor(max * Math.random());
-};
-
-const getRandomArray = (items, maxLength) => {
-  const length = getRandomIntegerNumber(0, maxLength);
-  return new Array(length).fill(``).map(() => getRandomArrayItem(items));
 };
 
 const getIcon = (eventType) => ICON_PATHS.filter((it) => it.startsWith(eventType.toLowerCase())).join();
@@ -110,16 +88,11 @@ export {
   getDatesDiff,
   formatMonthDay,
   formatTimeWithSlashes,
-  parseDateFromISOString,
-  parseDateWithSlashes,
+  parseDate,
   formatDatetime,
-  formatFullDatetime,
   getDuration,
   getDatetime,
   getWeekDay,
-  getRandomArrayItem,
-  getRandomIntegerNumber,
-  getRandomArray,
   getIcon,
   capitalizeFirstLetter,
   getEventType,

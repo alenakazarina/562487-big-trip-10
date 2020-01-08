@@ -13,8 +13,9 @@ import APIWithProvider from './api/provider';
 import Store from './api/store';
 
 
-const AUTHORIZATION = `Basic jVVsfsSyKSAzd29yZAo=`;
+const AUTHORIZATION = `Basic jVVsagSyGXApa29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
+const RELOAD_TIMEOUT = 8000;
 const StoreName = {
   POINTS: `bigtrip-points`,
   DESTINATIONS: `bigtrip-destinations`,
@@ -22,13 +23,7 @@ const StoreName = {
 };
 
 window.addEventListener(`load`, () => {
-  navigator.serviceWorker.register(`/sw.js`)
-    .then(() => {
-      // console.log(`Service Worker registration success`);
-    })
-    .catch(() => {
-      // console.log(`Service Worker registration failed: `, err);
-    });
+  navigator.serviceWorker.register(`/sw.js`);
 });
 
 const api = new API(END_POINT, AUTHORIZATION);
@@ -71,12 +66,13 @@ window.addEventListener(`online`, () => {
   if (!apiWithProvider.getSynchronize()) {
     apiWithProvider.sync()
       .then((points) => {
-        pointsModel.syncPoints(points);
+        pointsModel.setPoints(points);
       })
       .catch(() => {
         const modalComponent = new Modal();
         render(document.body, modalComponent.getElement());
         modalComponent.show();
+        setTimeout(() => location.reload(), RELOAD_TIMEOUT);
       });
   }
 });

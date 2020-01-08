@@ -1,17 +1,17 @@
 import AbstractComponent from './abstract-component';
-import {isSameMonth, getDatesDiff, formatMonthDay} from '../utils/common';
+import {isSameDay, isSameMonth, getDatesDiff, formatMonthDay} from '../utils/common';
 
 const sortByStartDate = (events) => {
   return events.slice().sort((a, b) => getDatesDiff(a.startDate, b.startDate));
 };
 
-const getUnique = (items) => {
-  return new Set(items);
-};
-
 const createDatesTemplate = (events) => {
   const startDate = events[0].startDate;
   const endDate = events[events.length - 1].endDate;
+
+  if (isSameDay(startDate, endDate)) {
+    return formatMonthDay(startDate);
+  }
 
   const startTime = formatMonthDay(startDate);
   const endTime = isSameMonth(startDate, endDate) ? formatMonthDay(endDate).split(` `)[1] : formatMonthDay(endDate);
@@ -20,11 +20,22 @@ const createDatesTemplate = (events) => {
 };
 
 const createTitlesTemplate = (events) => {
-  const titles = Array.from(getUnique(events.map((it) => it.destination.name)));
+  const titles = events.map((it) => it.destination.name);
+  const isOneDestination = titles.every((title) => title === titles[0]);
 
-  return titles.length <= 3 ?
-    titles.join(`&nbsp;&mdash;&nbsp;`) :
-    `${titles[0]}&nbsp;&mdash; ... &mdash;&nbsp; ${titles[titles.length - 1]}`;
+  if (titles.length === 1 || isOneDestination) {
+    return titles[0];
+  }
+
+  if (titles.length === 3 && (titles[0] === titles[1] || titles[1] === titles[2])) {
+    return [titles[0], titles[2]].join(`&nbsp;&mdash;&nbsp;`);
+  }
+
+  if (titles.length === 2 || titles.length === 3) {
+    return titles.join(`&nbsp;&mdash;&nbsp;`);
+  }
+
+  return `${titles[0]}&nbsp;&mdash; ... &mdash;&nbsp; ${titles[titles.length - 1]}`;
 };
 
 const createTripInfoMainTemplate = (events) => {

@@ -5,10 +5,10 @@ import {FilterType} from '../const';
 class FiltersController {
   constructor(container, pointsModel) {
     this._pointsModel = pointsModel;
-
     this._container = container;
     this._activeFilterType = FilterType.EVERYTHING;
     this._filtersComponent = null;
+
     this._onFilterChange = this._onFilterChange.bind(this);
     this._onDataChange = this._onDataChange.bind(this);
     this._pointsModel.addDataChangeHandler(this._onDataChange);
@@ -23,8 +23,8 @@ class FiltersController {
         checked: filterType === this._activeFilterType,
       };
     });
-    const oldComponent = this._filtersComponent;
 
+    const oldComponent = this._filtersComponent;
     this._filtersComponent = new FiltersComponent(filters);
 
     if (oldComponent) {
