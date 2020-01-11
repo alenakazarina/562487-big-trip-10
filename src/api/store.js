@@ -13,11 +13,7 @@ class Store {
   }
 
   getPoints() {
-    try {
-      return JSON.parse(this._storage.getItem(this._key.POINTS));
-    } catch (err) {
-      return {};
-    }
+    return JSON.parse(this._storage.getItem(this._key.POINTS));
   }
 
   removePoint(key) {
@@ -38,11 +34,7 @@ class Store {
   }
 
   getDestinations() {
-    try {
-      return JSON.parse(this._storage.getItem(this._key.DESTINATIONS));
-    } catch (err) {
-      return {};
-    }
+    return JSON.parse(this._storage.getItem(this._key.DESTINATIONS));
   }
 
   setOffer(id, value) {
@@ -54,11 +46,7 @@ class Store {
   }
 
   getOffers() {
-    try {
-      return JSON.parse(this._storage.getItem(this._key.OFFERS));
-    } catch (err) {
-      return {};
-    }
+    return JSON.parse(this._storage.getItem(this._key.OFFERS));
   }
 }
 

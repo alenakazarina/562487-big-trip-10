@@ -103,6 +103,7 @@ class Provider {
             point.offline = false;
             return point;
           });
+
           const updatedPoints = getSyncedItems(response.updated);
           [...createdPoints, ...updatedPoints].forEach((point) => {
             this._store.setPoint(point.id, point);
@@ -114,7 +115,7 @@ class Provider {
         });
     }
 
-    return Promise.reject(new Error(`Sync data failed`));
+    return Promise.reject(new Error(`Sync data failed!`));
   }
 
   getSynchronize() {

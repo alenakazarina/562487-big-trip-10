@@ -1095,12 +1095,6 @@ input[type=number] {
   line-height: 22px;
 }
 
-.modal-svg {
-  display: block;
-  margin: auto;
-  background: rgb(255, 255, 255);
-}
-
 @keyframes unfoldIn {
   0% {
     transform: scaleY(0.005) scaleX(0);

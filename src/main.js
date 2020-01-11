@@ -1,21 +1,19 @@
 import MenuComponent from './components/menu';
 import StatisticsComponent from './components/statistics';
-import Modal from './components/modal';
 import TripInfoController from './controllers/trip-info';
 import TripController from './controllers/trip';
 import FiltersController from './controllers/filters';
 import PointsModel from './models/points';
 import {render} from './utils/render';
+import {showModalOnError} from './utils/common';
 import {MenuTab} from './const';
-
 import API from './api';
 import APIWithProvider from './api/provider';
 import Store from './api/store';
 
-
-const AUTHORIZATION = `Basic jVVsagSyGXApa29yZAo=`;
+const AUTHORIZATION = `Basic jVVgasSyPWDpa29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
-const RELOAD_TIMEOUT = 8000;
+
 const StoreName = {
   POINTS: `bigtrip-points`,
   DESTINATIONS: `bigtrip-destinations`,
@@ -68,11 +66,8 @@ window.addEventListener(`online`, () => {
       .then((points) => {
         pointsModel.setPoints(points);
       })
-      .catch(() => {
-        const modalComponent = new Modal();
-        render(document.body, modalComponent.getElement());
-        modalComponent.show();
-        setTimeout(() => location.reload(), RELOAD_TIMEOUT);
+      .catch((err) => {
+        showModalOnError(err);
       });
   }
 });

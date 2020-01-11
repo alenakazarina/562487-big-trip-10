@@ -1,5 +1,7 @@
 import {ICON_PATHS, ACTIVITY_EVENTS} from '../const';
 import moment from 'moment';
+import {render} from './render';
+import ModalComponent from '../components/modal';
 
 const MSEC_IN_DAY = 1000 * 3600 * 24;
 
@@ -31,10 +33,6 @@ const getDatesDiff = (a, b) => {
 
 const formatMonthDay = (date) => {
   return moment(date).format(`MMM DD`);
-};
-
-const formatTimeWithSlashes = (date) => {
-  return `${moment(date).format(`DD/MM/YY H:mm`)}`;
 };
 
 const parseDate = (date) => {
@@ -80,6 +78,12 @@ const capitalizeFirstLetter = (str) => {
 
 const hasSameTitle = (array, it) => array.some((arrayIt) => array.length ? arrayIt.title === it.title : false);
 
+const showModalOnError = (err) => {
+  const modalComponent = new ModalComponent(err);
+  render(document.body, modalComponent.getElement());
+  modalComponent.show();
+};
+
 export {
   calculateSum,
   isSameDay,
@@ -87,7 +91,6 @@ export {
   getUniqueDays,
   getDatesDiff,
   formatMonthDay,
-  formatTimeWithSlashes,
   parseDate,
   formatDatetime,
   getDuration,
@@ -96,5 +99,6 @@ export {
   getIcon,
   capitalizeFirstLetter,
   getEventType,
-  hasSameTitle
+  hasSameTitle,
+  showModalOnError
 };

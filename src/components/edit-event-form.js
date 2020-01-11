@@ -1,6 +1,6 @@
 import AbstractSmartComponent from './abstract-smart-component';
 
-import {formatTimeWithSlashes, parseDate, getDatesDiff, getIcon, getEventType, capitalizeFirstLetter, hasSameTitle} from '../utils/common';
+import {parseDate, getDatesDiff, getIcon, getEventType, capitalizeFirstLetter, hasSameTitle} from '../utils/common';
 import {ERROR_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
@@ -405,7 +405,7 @@ class EditEventForm extends AbstractSmartComponent {
       allowInput: true,
       enableTime: true,
       defaultDate: date,
-      formatDate: formatTimeWithSlashes,
+      dateFormat: `d/m/Y H:i`,
       onValueUpdate: (pickerDate) => {
         if (node.name === `event-start-time`) {
           this._event.startDate = parseDate(pickerDate[0]);

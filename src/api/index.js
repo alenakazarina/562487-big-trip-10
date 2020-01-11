@@ -1,6 +1,7 @@
 import Point from '../models/point';
 import Destination from '../models/destination';
 import Offer from '../models/offer';
+import {showModalOnError} from '../utils/common';
 
 const Method = {
   GET: `GET`,
@@ -13,13 +14,14 @@ const checkStatus = (response) => {
   if (response.status >= 200 && response.status < 300) {
     return response;
   }
+
   throw Error(`${response.status}: ${response.statusText}`);
 };
 
 class API {
   constructor(endPoint, authorization) {
     this._endPoint = endPoint;
-    this._authorizatioin = authorization;
+    this._authorization = authorization;
   }
 
   getPoints() {
@@ -77,11 +79,12 @@ class API {
   }
 
   _load({url, method = Method.GET, body = null, headers = new Headers()}) {
-    headers.append(`Authorization`, this._authorizatioin);
+    headers.append(`Authorization`, this._authorization);
 
     return fetch(`${this._endPoint}/${url}`, {method, body, headers})
       .then(checkStatus)
       .catch((err) => {
+        showModalOnError(err);
         throw err;
       });
   }
