@@ -404,7 +404,7 @@ class EditEventForm extends AbstractSmartComponent {
     return flatpickr(node, {
       allowInput: true,
       enableTime: true,
-      defaultDate: date,
+      defaultDate: new Date(date),
       dateFormat: `d/m/Y H:i`,
       onValueUpdate: (pickerDate) => {
         if (node.name === `event-start-time`) {
