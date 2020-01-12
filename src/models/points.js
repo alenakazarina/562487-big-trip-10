@@ -99,14 +99,16 @@ class Points {
     return true;
   }
 
-  updatePoint(id, newPoint) {
+  updatePoint(id, newPoint, isFavorite) {
     const index = this._getPointById(id);
     if (index === -1) {
       throw Error(`no point with id ${id} in points array`);
     }
+
     this._points[index] = Object.assign({}, newPoint);
-    this._callHandlers(this._dataChangeHandlers);
-    return true;
+    if (isFavorite === false) {
+      this._callHandlers(this._dataChangeHandlers);
+    }
   }
 
   getPointsByFilter(filterType) {

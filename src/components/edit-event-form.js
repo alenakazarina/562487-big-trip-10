@@ -172,11 +172,10 @@ const createDetailsTemplate = (event, availableOffers, isDetails) => {
   `;
 };
 
-const createEditEventTemplate = (event, destinations, availableOffers, mode, isDetails, externalData) => {
-  const {id, isFavorite} = event;
+const createEditEventTemplate = (event, isFavorite, destinations, availableOffers, mode, isDetails, externalData) => {
   const headerInner = createFormHeaderTemplate(event, destinations, mode);
   const detailsSection = createDetailsTemplate(event, availableOffers, isDetails);
-  const favoriteButton = createFavoriteButtonTemplate(id, isFavorite);
+  const favoriteButton = createFavoriteButtonTemplate(event.id, isFavorite);
 
   return mode === Mode.ADD ? `
     <form class="trip-events__item  event  event--edit" action="#" method="post">
@@ -213,12 +212,14 @@ class EditEventForm extends AbstractSmartComponent {
     this._offers = offers;
     this._availableOffers = this._offers.find((offer) => offer.type === this._event.type).offers;
     this._eventForReset = Object.assign({}, event);
+    this._isFavorite = event.isFavorite;
     this._externalData = DefaultData;
     this._mode = mode;
     this._details = mode === Mode.EDIT;
     this._submitHandler = null;
     this._deleteHandler = null;
     this._resetHandler = null;
+    this._favoriteHandler = null;
     this._flatpickr = {
       START: null,
       END: null
@@ -230,21 +231,16 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event, this._destinations, this._availableOffers, this._mode, this._details, this._externalData);
+    return createEditEventTemplate(this._event, this._isFavorite, this._destinations, this._availableOffers, this._mode, this._details, this._externalData);
   }
 
   recoveryListeners() {
     if (this._mode === Mode.EDIT) {
-      this.getElement().querySelector(`form`).addEventListener(`submit`, this._submitHandler);
-      this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._resetHandler);
-      this.getElement().querySelector(`.event__favorite-btn`).addEventListener(`click`, this._favoriteHandler);
+      this.setCloseButtonClickHandler(this._resetHandler);
+      this.setFavoriteButtonClickHandler(this._favoriteHandler);
     }
-
-    if (this._mode === Mode.ADD) {
-      this.getElement().addEventListener(`submit`, this._submitHandler);
-    }
-
-    this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, this._deleteHandler);
+    this.setSubmitHandler(this._submitHandler);
+    this.setDeleteClickHandler(this._deleteHandler);
     this._subscribeOnEvents();
   }
 
@@ -255,7 +251,7 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   reset() {
-    this._event = Object.assign({}, this._eventForReset);
+    this._event = Object.assign({}, this._eventForReset, {isFavorite: this._isFavorite});
     this.rerender();
   }
 
@@ -294,7 +290,7 @@ class EditEventForm extends AbstractSmartComponent {
       destination: Object.assign({}, this._destinations.find((destination) => destination.name === formData.get(`event-destination`))),
       price: +formData.get(`event-price`),
       offers: this._event.offers,
-      isFavorite: this._event.isFavorite
+      isFavorite: this._isFavorite
     };
   }
 
@@ -328,11 +324,13 @@ class EditEventForm extends AbstractSmartComponent {
 
   setFavoriteButtonClickHandler(handler) {
     this._favoriteHandler = handler;
-    this.getElement().querySelector(`.event__favorite-checkbox`).addEventListener(`change`, this._favoriteHandler);
-  }
 
-  removeFavoriteButtonClickHandler() {
-    this.getElement().querySelector(`.event__favorite-checkbox`).removeEventListener(`change`, this._favoriteHandler);
+    this.getElement().querySelector(`.event__favorite-checkbox`).addEventListener(`change`, (evt) => {
+      evt.target.disabled = true;
+      this._isFavorite = !this._isFavorite;
+      evt.target.checked = this._isFavorite;
+      this._favoriteHandler();
+    });
   }
 
   _setValidation() {

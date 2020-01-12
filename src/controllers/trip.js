@@ -192,7 +192,7 @@ class TripController {
     this._renderWithSortType();
   }
 
-  _onDataChange(pointController, oldEvent, newEvent) {
+  _onDataChange(pointController, oldEvent, newEvent, isFavorite = false) {
     if (newEvent === null) {
       this._api.deletePoint(oldEvent.id).then(() => {
         this._removePoint(pointController, oldEvent.id);
@@ -213,10 +213,11 @@ class TripController {
       });
       return;
     }
+
     if (newEvent && oldEvent) {
       this._api.updatePoint(oldEvent.id, newEvent).then((point) => {
-        this._pointsModel.updatePoint(point.id, point);
-        this._onViewChange();
+        this._pointsModel.updatePoint(point.id, point, isFavorite);
+        pointController.setFavoriteButtonDisabled(false);
       })
       .catch(() => {
         pointController.shake();

@@ -123,6 +123,10 @@ class PointController {
     form.setDisabled(false);
   }
 
+  setFavoriteButtonDisabled(isDisabled) {
+    this._editEventComponent.getElement().querySelector(`.event__favorite-checkbox `).disabled = isDisabled;
+  }
+
   removeEscListener() {
     document.removeEventListener(`keydown`, this._onEscKeyDown);
   }
@@ -144,13 +148,13 @@ class PointController {
   _setHandlers() {
     this._eventComponent.setClickHandler(() => this._replaceEventToForm());
 
-    this._editEventComponent.setFavoriteButtonClickHandler((evt) => {
-      evt.target.disabled = true;
-      const newPoint = parseFormData(this._event);
-      newPoint.isFavorite = !newPoint.isFavorite;
+    this._editEventComponent.setFavoriteButtonClickHandler(() => {
       debounce(() => {
-        this._onDataChange(this, this._event, newPoint);
+        const data = this._editEventComponent.getFormData();
+        const formData = parseFormData(data);
+        this._onDataChange(this, this._event, formData, true);
       }, DEBOUNCE_TIMEOUT)();
+
     });
 
     this._editEventComponent.setCloseButtonClickHandler(() => {
