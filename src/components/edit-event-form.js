@@ -303,6 +303,44 @@ class EditEventForm extends AbstractSmartComponent {
     }
   }
 
+  _setValidation() {
+    const startDateInput = this._element.querySelector(`input[name=event-start-time]`);
+    if (getDatesDiff(this._event.startDate, this._event.endDate) > 0) {
+      startDateInput.setCustomValidity(`The start time should be earlier than the end time`);
+    } else {
+      startDateInput.setCustomValidity(``);
+    }
+  }
+
+  _applyFlatpickr() {
+    if (this._flatpickr.START && this._flatpickr.END) {
+      this._flatpickr.START.destroy();
+      this._flatpickr.END.destroy();
+      this._flatpickr.START = null;
+      this._flatpickr.END = null;
+    }
+    const [startDateInput, endDateInput] = Array.from(this.getElement().querySelectorAll(`.event__input--time`));
+    this._flatpickr.START = this._createFlatpickrInput(startDateInput, this._event.startDate);
+    this._flatpickr.END = this._createFlatpickrInput(endDateInput, this._event.endDate);
+  }
+
+  _createFlatpickrInput(node, date) {
+    return flatpickr(node, {
+      allowInput: true,
+      enableTime: true,
+      defaultDate: new Date(date),
+      dateFormat: `d/m/Y H:i`,
+      onValueUpdate: (pickerDate) => {
+        if (node.name === `event-start-time`) {
+          this._event.startDate = parseDate(pickerDate[0]);
+        } else {
+          this._event.endDate = parseDate(pickerDate[0]);
+        }
+        this._setValidation();
+      }
+    });
+  }
+
   setSubmitHandler(handler) {
     this._submitHandler = handler;
     if (this._mode === Mode.ADD) {
@@ -331,15 +369,6 @@ class EditEventForm extends AbstractSmartComponent {
       evt.target.checked = this._isFavorite;
       this._favoriteHandler();
     });
-  }
-
-  _setValidation() {
-    const startDateInput = this._element.querySelector(`input[name=event-start-time]`);
-    if (getDatesDiff(this._event.startDate, this._event.endDate) > 0) {
-      startDateInput.setCustomValidity(`The start time should be earlier than the end time`);
-    } else {
-      startDateInput.setCustomValidity(``);
-    }
   }
 
   _subscribeOnEvents() {
@@ -384,35 +413,6 @@ class EditEventForm extends AbstractSmartComponent {
         });
       });
     }
-  }
-
-  _applyFlatpickr() {
-    if (this._flatpickr.START && this._flatpickr.END) {
-      this._flatpickr.START.destroy();
-      this._flatpickr.END.destroy();
-      this._flatpickr.START = null;
-      this._flatpickr.END = null;
-    }
-    const [startDateInput, endDateInput] = Array.from(this.getElement().querySelectorAll(`.event__input--time`));
-    this._flatpickr.START = this._createFlatpickrInput(startDateInput, this._event.startDate);
-    this._flatpickr.END = this._createFlatpickrInput(endDateInput, this._event.endDate);
-  }
-
-  _createFlatpickrInput(node, date) {
-    return flatpickr(node, {
-      allowInput: true,
-      enableTime: true,
-      defaultDate: new Date(date),
-      dateFormat: `d/m/Y H:i`,
-      onValueUpdate: (pickerDate) => {
-        if (node.name === `event-start-time`) {
-          this._event.startDate = parseDate(pickerDate[0]);
-        } else {
-          this._event.endDate = parseDate(pickerDate[0]);
-        }
-        this._setValidation();
-      }
-    });
   }
 }
 
