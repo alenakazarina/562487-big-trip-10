@@ -20,7 +20,7 @@ const createDatesTemplate = (events) => {
 };
 
 const createTitlesTemplate = (events) => {
-  const titles = events.map((it) => it.destination.name);
+  const titles = events.map((event) => event.destination.name);
   const isOneDestination = titles.every((title) => title === titles[0]);
 
   if (titles.length === 1 || isOneDestination) {

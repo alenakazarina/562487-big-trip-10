@@ -12,7 +12,7 @@ const createTab = (title, active) => {
 };
 
 const createMenuTemplate = (active) => {
-  const tabsTemplate = Object.values(MenuTab).map((it) => createTab(it, active)).join(`\n`);
+  const tabsTemplate = Object.values(MenuTab).map((menuTab) => createTab(menuTab, active)).join(`\n`);
 
   return `
     <nav class="trip-controls__trip-tabs  trip-tabs">

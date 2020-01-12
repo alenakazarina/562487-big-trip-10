@@ -13,7 +13,7 @@ const createFilter = (filter) => {
 };
 
 const createFiltersTemplate = (filters) => {
-  const filtersTemplate = filters.map((it) => createFilter(it)).join(`\n`);
+  const filtersTemplate = filters.map((filter) => createFilter(filter)).join(`\n`);
 
   return `
     <form class="trip-filters" action="#" method="get">

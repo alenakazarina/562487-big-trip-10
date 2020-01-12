@@ -17,7 +17,7 @@ const createEventTemplate = (event) => {
   const start = getDatetime(startDate);
   const end = getDatetime(endDate);
   const duration = getDuration(startDate, endDate);
-  const offers = event.offers.slice(0, MAX_OFFERS_COUNT_TO_SHOW).map((it) => createOfferTemplate(it)).join(`\n`);
+  const offers = event.offers.slice(0, MAX_OFFERS_COUNT_TO_SHOW).map((offer) => createOfferTemplate(offer)).join(`\n`);
 
   return `
     <li class="trip-events__item">

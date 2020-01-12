@@ -29,7 +29,7 @@ const calculateCosts = (events) => {
   if (events.length === 0) {
     return 0;
   }
-  const eventsPricesAmount = calculateSum(events.map((it) => +it.price));
+  const eventsPricesAmount = calculateSum(events.map((event) => +event.price));
   const offers = events.map((event) => event.offers.map((offer) => +offer.price));
   const offersAmount = calculateSum(offers.map((arr) => calculateSum(arr)));
   return eventsPricesAmount + offersAmount;
@@ -64,7 +64,7 @@ class Points {
     return this._activeSortType === SortType.EVENT ?
       eventsDates
         .map((day) => events.filter((event) => isSameDay(event.startDate, day)))
-        .filter((it) => it.length) : [events];
+        .filter((days) => days.length) : [events];
   }
 
   getCostsAmount() {
@@ -140,7 +140,7 @@ class Points {
   }
 
   _getPointById(id) {
-    return this._points.findIndex((it) => it.id === id);
+    return this._points.findIndex((point) => point.id === id);
   }
 }
 

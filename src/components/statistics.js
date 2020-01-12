@@ -20,9 +20,9 @@ const EmojiValue = {
 };
 
 const getNamesWithEmoji = (eventsNames) => {
-  return eventsNames.map((it) => {
-    const emoji = EmojiValue[it.split(`-`)[0].toUpperCase()];
-    return `${emoji} ${it.toUpperCase()}`;
+  return eventsNames.map((eventName) => {
+    const emoji = EmojiValue[eventName.split(`-`)[0].toUpperCase()];
+    return `${emoji} ${eventName.toUpperCase()}`;
   });
 };
 
@@ -94,8 +94,8 @@ const createChart = (ctx, chartText, chartLabels, chartData, chartFormatter) => 
 const getMoneyChartData = (points) => {
   const costs = [];
   const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
-  eventsNames.forEach((it, i) => {
-    costs[i] = calculateSum(points.filter((point) => point.type === it).map((point) => +point.price));
+  eventsNames.forEach((eventName, i) => {
+    costs[i] = calculateSum(points.filter((point) => point.type === eventName).map((point) => +point.price));
   });
   return [eventsNames, costs];
 };
@@ -110,10 +110,10 @@ const getTransportChartData = (points) => {
   let transportEvents = [];
   const eventsNames = TRANSFER_EVENTS;
 
-  TRANSFER_EVENTS.forEach((it, i) => {
-    transportEvents[i] = points.filter((point) => getEventType(point.type) && point.type === it);
+  TRANSFER_EVENTS.forEach((transferEvent, i) => {
+    transportEvents[i] = points.filter((point) => getEventType(point.type) && point.type === transferEvent);
   });
-  const eventsCounts = transportEvents.map((it) => it.length);
+  const eventsCounts = transportEvents.map((events) => events.length);
   return [eventsNames, eventsCounts];
 };
 
@@ -130,8 +130,8 @@ const renderTransportChart = (transportCtx, points) => {
 const getTimeChartData = (points) => {
   const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
   const durations = [];
-  eventsNames.forEach((it, i) => {
-    durations[i] = points.filter((point) => point.type === it)
+  eventsNames.forEach((eventName, i) => {
+    durations[i] = points.filter((point) => point.type === eventName)
       .map((point) => getDatesDiff(point.endDate, point.startDate));
   });
   return [eventsNames, durations.map((it) => convertMsToHours(calculateSum(it)))];
@@ -148,9 +148,9 @@ const createStatisticsTemplate = (points) => {
   const [labelsForTransportChart, transportChartData] = getTransportChartData(points);
   const [labelsForTimeChart, timeChartData] = getTimeChartData(points);
 
-  const ariaLabelForMoneyChart = `Bar Chart Values in Euros. `.concat(labelsForMoneyChart.map((it, i) => `${it}: ${moneyChartData[i]}`).join(`, `));
-  const ariaLabelForTransportChart = `Bar Chart Values as a number of times. `.concat(labelsForTransportChart.map((it, i) => `${it}: ${transportChartData[i]}`).join(`, `));
-  const ariaLabelForTimeChart = `Bar Chart Values in hours. `.concat(labelsForTimeChart.map((it, i) => `${it}: ${timeChartData[i]}`).join(`, `));
+  const ariaLabelForMoneyChart = `Bar Chart Values in Euros. `.concat(labelsForMoneyChart.map((label, i) => `${label}: ${moneyChartData[i]}`).join(`, `));
+  const ariaLabelForTransportChart = `Bar Chart Values as a number of times. `.concat(labelsForTransportChart.map((label, i) => `${label}: ${transportChartData[i]}`).join(`, `));
+  const ariaLabelForTimeChart = `Bar Chart Values in hours. `.concat(labelsForTimeChart.map((label, i) => `${label}: ${timeChartData[i]}`).join(`, `));
 
   return `
     <section class="statistics">

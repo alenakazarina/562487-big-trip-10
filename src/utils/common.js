@@ -5,30 +5,30 @@ import ModalComponent from '../components/modal';
 
 const MSEC_IN_DAY = 1000 * 3600 * 24;
 
-const calculateSum = (items) => items.reduce((acc, it) => {
-  return it + acc;
+const calculateSum = (prices) => prices.reduce((amount, price) => {
+  return price + amount;
 }, 0);
 
-const isSameDay = (a, b) => {
-  return moment(a).isSame(b, `day`) && moment(a).isSame(b, `month`) && moment(a).isSame(b, `year`);
+const isSameDay = (firstDate, secondDate) => {
+  return moment(firstDate).isSame(secondDate, `day`) && moment(firstDate).isSame(secondDate, `month`) && moment(firstDate).isSame(secondDate, `year`);
 };
 
-const isSameMonth = (a, b) => {
-  return moment(a).isSame(b, `month`) && moment(a).isSame(b, `year`);
+const isSameMonth = (firstDate, secondDate) => {
+  return moment(firstDate).isSame(secondDate, `month`) && moment(firstDate).isSame(secondDate, `year`);
 };
 
 const getUniqueDays = (days) => {
   const uniqueDays = [];
   days.forEach((day, i) => {
-    if (i === 0 || uniqueDays.every((it) => isSameDay(it, day) === false)) {
+    if (i === 0 || uniqueDays.every((uniqueDay) => isSameDay(uniqueDay, day) === false)) {
       uniqueDays.push(day);
     }
   });
   return uniqueDays;
 };
 
-const getDatesDiff = (a, b) => {
-  return moment(a) - moment(b);
+const getDatesDiff = (firstDate, secondDate) => {
+  return moment(firstDate) - moment(secondDate);
 };
 
 const formatMonthDay = (date) => {
@@ -68,7 +68,7 @@ const getWeekDay = (date) => {
   return moment(date).format(`ddd DD`);
 };
 
-const getIcon = (eventType) => ICON_PATHS.filter((it) => it.startsWith(eventType.toLowerCase())).join();
+const getIcon = (eventType) => ICON_PATHS.filter((iconPath) => iconPath.startsWith(eventType.toLowerCase())).join();
 
 const getEventType = (event) => ACTIVITY_EVENTS.findIndex((it) => it.toLowerCase() === event) !== -1 ? `activity` : `transfer`;
 
@@ -76,7 +76,7 @@ const capitalizeFirstLetter = (str) => {
   return `${str.slice(0, 1).toUpperCase()}${str.slice(1)}`;
 };
 
-const hasSameTitle = (array, it) => array.some((arrayIt) => array.length ? arrayIt.title === it.title : false);
+const hasSameTitle = (offers, availableOffer) => offers.some((offer) => offers.length ? offer.title === availableOffer.title : false);
 
 const showModalOnError = (err) => {
   const modalComponent = new ModalComponent(err);

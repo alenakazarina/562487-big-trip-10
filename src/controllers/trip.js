@@ -106,7 +106,7 @@ class TripController {
     this._tripDaysListComponent = new TripDaysListComponent(days, this._sortType);
     render(this._container, this._tripDaysListComponent.getElement());
 
-    this._pointControllers.forEach((it) => it.destroy());
+    this._pointControllers.forEach((pointController) => pointController.destroy());
     this._pointControllers = days.map((day, i) => {
       const container = this._tripDaysListComponent.getElement()
         .querySelectorAll(`.trip-days__item`)[i]
@@ -180,7 +180,7 @@ class TripController {
   }
 
   _removeEscListenersIfExists() {
-    const index = this._pointControllers.findIndex((it) => it._mode === Mode.EDIT);
+    const index = this._pointControllers.findIndex((pointController) => pointController._mode === Mode.EDIT);
     if (index !== -1) {
       this._pointControllers[index].removeEscListener();
     }
@@ -225,7 +225,7 @@ class TripController {
   }
 
   _onViewChange() {
-    this._pointControllers.forEach((it) => it.setDefaultView());
+    this._pointControllers.forEach((pointController) => pointController.setDefaultView());
     if (this._addEventFormController) {
       this._addEventButtonComponent.setDisabled(false);
       this._addEventFormController.destroy();
