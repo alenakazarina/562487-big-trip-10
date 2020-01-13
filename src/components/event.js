@@ -1,4 +1,5 @@
 import AbstractComponent from './abstract-component';
+import {sanitizeTemplate} from '../utils/render';
 import {getDuration, getDatetime, capitalizeFirstLetter, getIcon} from '../utils/common';
 import {MAX_OFFERS_COUNT_TO_SHOW} from '../const';
 
@@ -52,7 +53,8 @@ class Event extends AbstractComponent {
   }
 
   getTemplate() {
-    return createEventTemplate(this._event);
+    const template = createEventTemplate(this._event);
+    return sanitizeTemplate(template);
   }
 
   setClickHandler(handler) {

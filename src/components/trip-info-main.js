@@ -1,5 +1,6 @@
 import AbstractComponent from './abstract-component';
 import {isSameDay, isSameMonth, getDatesDiff, formatMonthDay} from '../utils/common';
+import {sanitizeTemplate} from '../utils/render';
 
 const sortByStartDate = (events) => {
   return events.slice().sort((a, b) => getDatesDiff(a.startDate, b.startDate));
@@ -67,7 +68,8 @@ class TripInfoMain extends AbstractComponent {
   }
 
   getTemplate() {
-    return createTripInfoMainTemplate(this._events);
+    const template = createTripInfoMainTemplate(this._events);
+    return sanitizeTemplate(template);
   }
 }
 

@@ -3,6 +3,7 @@ import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import {TRANSFER_EVENTS, ACTIVITY_EVENTS} from '../const';
 import {calculateSum, getDatesDiff, getEventType} from '../utils/common';
+import {sanitizeTemplate} from '../utils/render';
 
 const MS_IN_HOUR = 1000 * 3600;
 
@@ -184,7 +185,8 @@ class Statistics extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createStatisticsTemplate(this._points);
+    const template = createStatisticsTemplate(this._points);
+    return sanitizeTemplate(template);
   }
 
   recoveryListeners() {}

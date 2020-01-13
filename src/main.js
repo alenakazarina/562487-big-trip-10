@@ -11,7 +11,7 @@ import API from './api';
 import APIWithProvider from './api/provider';
 import Store from './api/store';
 
-const AUTHORIZATION = `Basic jVVgasSyPWDpa29yZAo=`;
+const AUTHORIZATION = `Basic jVVgasSyGBHpa29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
 
 const StoreName = {

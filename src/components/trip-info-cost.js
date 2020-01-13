@@ -1,4 +1,5 @@
 import AbstractComponent from './abstract-component';
+import {sanitizeTemplate} from '../utils/render';
 
 const createTripInfoCostTemplate = (costsAmount) => {
   return `
@@ -15,7 +16,8 @@ class TripInfoCost extends AbstractComponent {
   }
 
   getTemplate() {
-    return createTripInfoCostTemplate(this._costsAmount);
+    const template = createTripInfoCostTemplate(this._costsAmount);
+    return sanitizeTemplate(template);
   }
 }
 

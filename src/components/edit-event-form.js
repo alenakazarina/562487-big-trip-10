@@ -1,5 +1,5 @@
 import AbstractSmartComponent from './abstract-smart-component';
-
+import {sanitizeTemplate} from '../utils/render';
 import {parseDate, getDatesDiff, getIcon, getEventType, capitalizeFirstLetter, hasSameTitle} from '../utils/common';
 import {ERROR_CLASS, ACTIVITY_EVENTS, TRANSFER_EVENTS, Mode, Preposition} from '../const';
 import flatpickr from 'flatpickr';
@@ -231,7 +231,8 @@ class EditEventForm extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event, this._isFavorite, this._destinations, this._availableOffers, this._mode, this._details, this._externalData);
+    const template = createEditEventTemplate(this._event, this._isFavorite, this._destinations, this._availableOffers, this._mode, this._details, this._externalData);
+    return sanitizeTemplate(template);
   }
 
   recoveryListeners() {

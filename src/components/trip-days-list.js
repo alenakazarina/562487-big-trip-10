@@ -1,6 +1,7 @@
 import AbstractComponent from './abstract-component';
 import {formatDatetime, getWeekDay} from '../utils/common';
 import {SortType} from '../const';
+import {sanitizeTemplate} from '../utils/render';
 
 const createDayInfoTemplate = (day, count) => {
   const tripDay = getWeekDay(day);
@@ -44,7 +45,8 @@ class TripDaysList extends AbstractComponent {
   }
 
   getTemplate() {
-    return createTripDaysListTemplate(this._days, this._sortType);
+    const template = createTripDaysListTemplate(this._days, this._sortType);
+    return sanitizeTemplate(template);
   }
 }
 

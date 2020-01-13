@@ -1,6 +1,12 @@
+import DOMPurify from 'dompurify/dist/purify';
+
 const RenderPositions = {
   AFTERBEGIN: `afterbegin`,
   BEFOREEND: `beforeend`
+};
+
+const sanitizeTemplate = (template) => {
+  return DOMPurify.sanitize(template);
 };
 
 const createElement = (template) => {
@@ -48,5 +54,6 @@ export {
   createElement,
   render,
   replace,
-  remove
+  remove,
+  sanitizeTemplate
 };
