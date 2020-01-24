@@ -105,10 +105,6 @@ class PointController {
     }, Timeout.SHAKE_ANIMATION);
   }
 
-  rerenderForm() {
-    this._editEventComponent.rerender();
-  }
-
   removeEscListener() {
     document.removeEventListener(`keydown`, this._onEscKeyDown);
   }
@@ -135,6 +131,7 @@ class PointController {
         const formData = this._editEventComponent.getFormData();
         const updatedEvent = Object.assign({}, this._event, {isFavorite: formData.isFavorite});
         this._onDataChange(this, this._event, parseFormData(updatedEvent), true);
+        this._editEventComponent.rerender();
       }, Timeout.DEBOUNCE)();
     });
 

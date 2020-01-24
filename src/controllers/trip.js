@@ -266,7 +266,6 @@ class TripController {
     if (newEvent && oldEvent) {
       this._api.updatePoint(oldEvent.id, newEvent).then((point) => {
         this._pointsModel.updatePoint(point.id, point, isFavorite);
-        pointController.rerenderForm();
       })
       .catch(() => {
         pointController.shake();
