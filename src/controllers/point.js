@@ -53,6 +53,7 @@ class PointController {
       this._setAddEventFormHandlers();
       document.addEventListener(`keydown`, this._onEscKeyDown);
       render(this._container, this._addEventFormComponent.getElement(), RenderPositions.BEFORELASTCHILD);
+      this._addEventFormComponent.applyFlatpickr();
       return;
     }
 
@@ -114,6 +115,7 @@ class PointController {
     replace(this._eventComponent, this._editEventComponent);
     this.removeEscListener();
     this._mode = Mode.VIEW;
+    this._editEventComponent.removeFlatpickr();
   }
 
   _replaceEventToForm() {
@@ -121,6 +123,7 @@ class PointController {
     replace(this._editEventComponent, this._eventComponent);
     document.addEventListener(`keydown`, this._onEscKeyDown);
     this._mode = Mode.EDIT;
+    this._editEventComponent.applyFlatpickr();
   }
 
   _setHandlers() {
