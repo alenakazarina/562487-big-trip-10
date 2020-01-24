@@ -1,10 +1,10 @@
 import AbstractComponent from './abstract-component';
-import {formatDatetime, getWeekDay} from '../utils/common';
+import {formatDatetime, formatMonthDay} from '../utils/common';
 import {SortType} from '../const';
 import {sanitizeTemplate} from '../utils/render';
 
 const createDayInfoTemplate = (day, count) => {
-  const tripDay = getWeekDay(day);
+  const tripDay = formatMonthDay(day);
   const datetime = formatDatetime(day);
   return `
     <span class="day__counter">${count + 1}</span>

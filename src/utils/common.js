@@ -79,10 +79,6 @@ const getDatetime = (date) => {
   };
 };
 
-const getWeekDay = (date) => {
-  return moment(date).format(`ddd DD`);
-};
-
 const capitalizeFirstLetter = (eventType) => {
   return `${eventType.slice(0, 1).toUpperCase()}${eventType.slice(1)}`;
 };
@@ -106,7 +102,6 @@ export {
   formatDatetime,
   getDuration,
   getDatetime,
-  getWeekDay,
   capitalizeFirstLetter,
   hasSameTitle,
   showModalOnError
