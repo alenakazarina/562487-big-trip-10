@@ -1,8 +1,10 @@
-import DOMPurify from 'dompurify/dist/purify';
+import DOMPurify from 'dompurify';
 
 const RenderPositions = {
   AFTERBEGIN: `afterbegin`,
-  BEFOREEND: `beforeend`
+  BEFOREEND: `beforeend`,
+  AFTERFIRSTCHILD: `afterfirstchild`,
+  BEFORELASTCHILD: `beforelastchild`
 };
 
 const sanitizeTemplate = (template) => {
@@ -23,6 +25,14 @@ const render = (container, element, place = RenderPositions.BEFOREEND) => {
     case RenderPositions.BEFOREEND:
       container.append(element);
       break;
+    case RenderPositions.AFTERFIRSTCHILD:
+      container.firstElementChild.after(element);
+      break;
+    case RenderPositions.BEFORELASTCHILD:
+      container.lastElementChild.before(element);
+      break;
+    default:
+      throw Error(`There is no place ${place} in RenderPositions enum`);
   }
 };
 
@@ -49,11 +59,17 @@ const remove = (component) => {
   component.removeElement();
 };
 
+const changeView = (newView, oldView) => {
+  oldView.hide();
+  newView.show();
+};
+
 export {
   RenderPositions,
   createElement,
   render,
   replace,
   remove,
+  changeView,
   sanitizeTemplate
 };

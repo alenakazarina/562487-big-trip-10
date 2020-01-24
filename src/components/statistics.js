@@ -1,31 +1,11 @@
 import AbstractSmartComponent from './abstract-smart-component';
 import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import {TRANSFER_EVENTS, ACTIVITY_EVENTS} from '../const';
-import {calculateSum, getDatesDiff, getEventType} from '../utils/common';
+import {TRANSFER_EVENTS, availableEvents} from '../const';
+import {calculateSum, getDatesDiff} from '../utils/common';
 import {sanitizeTemplate} from '../utils/render';
 
 const MS_IN_HOUR = 1000 * 3600;
-
-const EmojiValue = {
-  TAXI: `🚕`,
-  BUS: `🚌`,
-  TRAIN: `🚂`,
-  SHIP: `🚢`,
-  TRANSPORT: `🚊`,
-  DRIVE: `🚗`,
-  FLIGHT: `✈️`,
-  CHECK: `🏨`,
-  SIGHTSEEING: `🏛`,
-  RESTAURANT: `🍴`
-};
-
-const getNamesWithEmoji = (eventsNames) => {
-  return eventsNames.map((eventName) => {
-    const emoji = EmojiValue[eventName.split(`-`)[0].toUpperCase()];
-    return `${emoji} ${eventName.toUpperCase()}`;
-  });
-};
 
 const convertMsToHours = (time) => Math.floor(time / MS_IN_HOUR);
 
@@ -34,7 +14,7 @@ const createChart = (ctx, chartText, chartLabels, chartData, chartFormatter) => 
     plugins: [ChartDataLabels],
     type: `horizontalBar`,
     data: {
-      labels: getNamesWithEmoji(chartLabels),
+      labels: chartLabels,
       datasets: [
         {
           data: chartData,
@@ -93,55 +73,58 @@ const createChart = (ctx, chartText, chartLabels, chartData, chartFormatter) => 
 };
 
 const getMoneyChartData = (points) => {
+  const chartLabels = availableEvents.map((event) => event.chartLabel);
+
   const costs = [];
-  const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
-  eventsNames.forEach((eventName, i) => {
-    costs[i] = calculateSum(points.filter((point) => point.type === eventName).map((point) => +point.price));
+  availableEvents.forEach((availableEvent, i) => {
+    costs[i] = calculateSum(points.filter((point) => point.type === availableEvent.type).map((point) => +point.price));
   });
-  return [eventsNames, costs];
+  return [chartLabels, costs];
 };
 
 const renderMoneyChart = (moneyCtx, points) => {
-  const [eventsNames, costs] = getMoneyChartData(points);
+  const [chartLabels, costs] = getMoneyChartData(points);
   const getFormat = (value) => `€ ${value}`;
-  return createChart(moneyCtx, `MONEY`, eventsNames, costs, getFormat);
+  return createChart(moneyCtx, `MONEY`, chartLabels, costs, getFormat);
 };
 
 const getTransportChartData = (points) => {
-  let transportEvents = [];
-  const eventsNames = TRANSFER_EVENTS;
+  const transferEvents = Object.values(TRANSFER_EVENTS);
+  const chartLabels = transferEvents.map((event) => event.chartLabel);
 
-  TRANSFER_EVENTS.forEach((transferEvent, i) => {
-    transportEvents[i] = points.filter((point) => getEventType(point.type) && point.type === transferEvent);
+  const transportChartEvents = [];
+  transferEvents.forEach((event, i) => {
+    transportChartEvents[i] = points.filter((point) => point.type === event.type);
   });
-  const eventsCounts = transportEvents.map((events) => events.length);
-  return [eventsNames, eventsCounts];
+  const eventsCounts = transportChartEvents.map((events) => events.length);
+  return [chartLabels, eventsCounts];
 };
 
 const renderTransportChart = (transportCtx, points) => {
-  let [eventsNames, eventsCounts] = getTransportChartData(points);
-  if (eventsNames.length === 0) {
-    eventsNames = TRANSFER_EVENTS;
+  let [chartLabels, eventsCounts] = getTransportChartData(points);
+  if (chartLabels.length === 0) {
+    chartLabels = Object.values(TRANSFER_EVENTS);
     eventsCounts = TRANSFER_EVENTS.map(() => 0);
   }
   const getFormat = (value) => `${value}x`;
-  return createChart(transportCtx, `TRANSPORT`, eventsNames, eventsCounts, getFormat);
+  return createChart(transportCtx, `TRANSPORT`, chartLabels, eventsCounts, getFormat);
 };
 
 const getTimeChartData = (points) => {
-  const eventsNames = [].concat(TRANSFER_EVENTS, ACTIVITY_EVENTS);
-  const durations = [];
-  eventsNames.forEach((eventName, i) => {
-    durations[i] = points.filter((point) => point.type === eventName)
+  const chartLabels = availableEvents.map((event) => event.chartLabel);
+
+  const durationsByType = [];
+  availableEvents.forEach((event, i) => {
+    durationsByType[i] = points.filter((point) => point.type === event.type)
       .map((point) => getDatesDiff(point.endDate, point.startDate));
   });
-  return [eventsNames, durations.map((it) => convertMsToHours(calculateSum(it)))];
+  return [chartLabels, durationsByType.map((durations) => convertMsToHours(calculateSum(durations)))];
 };
 
 const renderTimeChart = (timeCtx, points) => {
-  const [eventsNames, durations] = getTimeChartData(points);
+  const [chartLabels, durations] = getTimeChartData(points);
   const getFormat = (value) => value === 0 ? `< 1H` : `${value}H`;
-  return createChart(timeCtx, `TIME SPENT`, eventsNames, durations, getFormat);
+  return createChart(timeCtx, `TIME SPENT`, chartLabels, durations, getFormat);
 };
 
 const createStatisticsTemplate = (points) => {
@@ -154,7 +137,7 @@ const createStatisticsTemplate = (points) => {
   const ariaLabelForTimeChart = `Bar Chart Values in hours. `.concat(labelsForTimeChart.map((label, i) => `${label}: ${timeChartData[i]}`).join(`, `));
 
   return `
-    <section class="statistics">
+    <section class="statistics slide--left">
       <h2 class="visually-hidden">Trip statistics</h2>
       <div class="statistics__item statistics__item--money">
         <h3 class="visually-hidden">Money chart</h3>
@@ -180,8 +163,6 @@ class Statistics extends AbstractSmartComponent {
     this._moneyChart = null;
     this._transportChart = null;
     this._timeChart = null;
-
-    this._renderCharts();
   }
 
   getTemplate() {

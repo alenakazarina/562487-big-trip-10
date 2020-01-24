@@ -16,7 +16,7 @@ class TripInfoController {
   render() {
     const oldTripInfoMainComponent = this._tripInfoMainComponent;
     const oldTripInfoCostComponent = this._tripInfoCostComponent;
-    this._tripInfoMainComponent = new TripInfoMainComponent(this._pointsModel.getPoints());
+    this._tripInfoMainComponent = new TripInfoMainComponent(this._pointsModel.getPointsAll());
     this._tripInfoCostComponent = new TripInfoCostComponent(this._pointsModel.getCostsAmount());
 
     if (oldTripInfoMainComponent && oldTripInfoCostComponent) {

@@ -1,15 +1,15 @@
 import {parseDate} from '../utils/common';
 
 class Point {
-  constructor(data) {
-    this.id = data[`id`];
-    this.type = data[`type`];
-    this.startDate = parseDate(data[`date_from`]);
-    this.endDate = parseDate(data[`date_to`]);
-    this.destination = data[`destination`];
-    this.price = data[`base_price`];
-    this.offers = data[`offers`];
-    this.isFavorite = data[`is_favorite`];
+  constructor(point) {
+    this.id = point[`id`];
+    this.type = point[`type`];
+    this.startDate = parseDate(point[`date_from`]);
+    this.endDate = parseDate(point[`date_to`]);
+    this.destination = point[`destination`];
+    this.price = point[`base_price`];
+    this.offers = point[`offers`];
+    this.isFavorite = point[`is_favorite`];
   }
 
   toRAW() {
@@ -25,12 +25,12 @@ class Point {
     };
   }
 
-  static parsePoint(data) {
-    return new Point(data);
+  static parsePoint(point) {
+    return new Point(point);
   }
 
-  static parsePoints(data) {
-    return data.map(Point.parsePoint);
+  static parsePoints(points) {
+    return points.map(Point.parsePoint);
   }
 }
 

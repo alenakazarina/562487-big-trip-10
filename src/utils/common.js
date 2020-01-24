@@ -1,9 +1,6 @@
-import {ICON_PATHS, ACTIVITY_EVENTS} from '../const';
 import moment from 'moment';
 import {render} from './render';
 import ModalComponent from '../components/modal';
-
-const MSEC_IN_DAY = 1000 * 3600 * 24;
 
 const calculateSum = (prices) => prices.reduce((amount, price) => {
   return price + amount;
@@ -18,13 +15,12 @@ const isSameMonth = (firstDate, secondDate) => {
 };
 
 const getUniqueDays = (days) => {
-  const uniqueDays = [];
-  days.forEach((day, i) => {
+  return days.reduce((uniqueDays, day, i) => {
     if (i === 0 || uniqueDays.every((uniqueDay) => isSameDay(uniqueDay, day) === false)) {
-      uniqueDays.push(day);
+      uniqueDays = uniqueDays.concat(day);
     }
-  });
-  return uniqueDays;
+    return uniqueDays;
+  }, []);
 };
 
 const getDatesDiff = (firstDate, secondDate) => {
@@ -44,23 +40,42 @@ const formatDatetime = (date) => {
 };
 
 const getDuration = (startDate, endDate) => {
-  const duration = moment.duration(moment(endDate).diff(moment(startDate)));
-  const daysCount = Math.floor(duration._milliseconds / MSEC_IN_DAY);
-  const durationDays = daysCount ? `${daysCount}D` : ``;
-  const durationHours = (durationDays || duration.get(`hours`)) ? `${duration.get(`hours`)}H` : ``;
-  const durationMinutes = (durationHours || duration.get(`minutes`)) ? `${duration.get(`minutes`)}M` : ``;
+  const Duration = {
+    DAYS: Math.floor(moment.duration(moment(endDate).diff(startDate)).asDays()),
+    HOURS: moment.duration(moment(endDate).diff(startDate)).hours(),
+    MINUTES: moment.duration(moment(endDate).diff(startDate)).minutes()
+  };
 
-  if (!durationDays && !durationHours && !durationMinutes) {
-    return `0M`;
-  }
+  const getDaysFormat = (days) => {
+    if (days === 0) {
+      return ``;
+    }
+    return days < 10 ? `0${days}D` : `${days}D`;
+  };
 
-  return `${durationDays} ${durationHours} ${durationMinutes}`;
+  const getHoursFormat = (days, hours) => {
+    if (days === 0 && hours === 0) {
+      return ``;
+    }
+
+    return hours < 10 ? `0${hours}H` : `${hours}H`;
+  };
+
+  const getMinutesFormat = (minutes) => {
+    return minutes < 10 ? `0${minutes}M` : `${minutes}M`;
+  };
+
+  return {
+    days: getDaysFormat(Duration.DAYS),
+    hours: getHoursFormat(Duration.DAYS, Duration.HOURS),
+    minutes: getMinutesFormat(Duration.MINUTES)
+  };
 };
 
 const getDatetime = (date) => {
   return {
     datetime: date,
-    time: moment(date).format(`hh:mm`)
+    time: moment(date).format(`HH:mm`)
   };
 };
 
@@ -68,12 +83,8 @@ const getWeekDay = (date) => {
   return moment(date).format(`ddd DD`);
 };
 
-const getIcon = (eventType) => ICON_PATHS.filter((iconPath) => iconPath.startsWith(eventType.toLowerCase())).join();
-
-const getEventType = (event) => ACTIVITY_EVENTS.findIndex((it) => it.toLowerCase() === event) !== -1 ? `activity` : `transfer`;
-
-const capitalizeFirstLetter = (str) => {
-  return `${str.slice(0, 1).toUpperCase()}${str.slice(1)}`;
+const capitalizeFirstLetter = (eventType) => {
+  return `${eventType.slice(0, 1).toUpperCase()}${eventType.slice(1)}`;
 };
 
 const hasSameTitle = (offers, availableOffer) => offers.some((offer) => offers.length ? offer.title === availableOffer.title : false);
@@ -96,9 +107,7 @@ export {
   getDuration,
   getDatetime,
   getWeekDay,
-  getIcon,
   capitalizeFirstLetter,
-  getEventType,
   hasSameTitle,
   showModalOnError
 };

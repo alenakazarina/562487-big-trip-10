@@ -1,4 +1,4 @@
-import {render, replace} from '../utils/render';
+import {render, replace, RenderPositions} from '../utils/render';
 import EventComponent from '../components/event';
 import EditEventComponent from '../components/edit-event-form';
 import {debounce} from '../components/debounce';
@@ -6,24 +6,9 @@ import {ERROR_CLASS, Mode} from '../const';
 import {remove} from '../utils/render';
 import PointModel from '../models/point';
 
-const SHAKE_ANIMATION_TIMEOUT = 600;
-const DEBOUNCE_TIMEOUT = 500;
-
-const getDefaultEvent = () => {
-  return {
-    id: Date.now(),
-    type: `sightseeing`,
-    startDate: new Date(),
-    endDate: new Date(),
-    destination: {
-      name: ``,
-      description: ``,
-      offers: []
-    },
-    price: 0,
-    offers: [],
-    isFavorite: false
-  };
+const Timeout = {
+  SHAKE_ANIMATION: 600,
+  DEBOUNCE: 500
 };
 
 const parseFormData = (formData) => {
@@ -47,6 +32,7 @@ class PointController {
     this._eventComponent = null;
     this._editEventComponent = null;
     this._addEventFormComponent = null;
+    this._formComponent = null;
 
     this._onDataChange = onDataChange;
     this._onViewChange = onViewChange;
@@ -59,21 +45,23 @@ class PointController {
 
   render(event, destinations, offers, mode) {
     this._mode = mode;
+    this._event = event;
+
     if (this._mode === Mode.ADD) {
-      this._event = getDefaultEvent();
       this._addEventFormComponent = new EditEventComponent(this._event, destinations, offers, Mode.ADD);
+      this._formComponent = this._addEventFormComponent;
       this._setAddEventFormHandlers();
       document.addEventListener(`keydown`, this._onEscKeyDown);
-      this._container.insertBefore(this._addEventFormComponent.getElement(), this._container.lastElementChild);
+      render(this._container, this._addEventFormComponent.getElement(), RenderPositions.BEFORELASTCHILD);
       return;
     }
 
-    this._event = event;
     const oldEventComponent = this._eventComponent;
     const oldEditEventComponent = this._editEventComponent;
 
     this._eventComponent = new EventComponent(event);
     this._editEventComponent = new EditEventComponent(event, destinations, offers, Mode.EDIT);
+    this._formComponent = this._editEventComponent;
 
     this._setHandlers();
 
@@ -104,27 +92,21 @@ class PointController {
   }
 
   shake() {
-    const form = this._mode === Mode.ADD ? this._addEventFormComponent : this._editEventComponent;
-    form.getElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+    this._formComponent.getElement().style.animation = `shake ${Timeout.SHAKE_ANIMATION / 1000}s`;
 
     setTimeout(() => {
-      form.getElement().style.animation = ``;
-      form.setData({
+      this._formComponent.getElement().style.animation = ``;
+      this._formComponent.setData({
         saveButtonText: `Save`,
         deleteButtonText: `Delete`,
       });
-      form.getElement().classList.add(ERROR_CLASS);
-      form.setDisabled(false);
-    }, SHAKE_ANIMATION_TIMEOUT);
+      this._formComponent.getElement().classList.add(ERROR_CLASS);
+      this._formComponent.setDisabled(false);
+    }, Timeout.SHAKE_ANIMATION);
   }
 
-  removeDisabledState() {
-    const form = this._mode === Mode.ADD ? this._addEventFormComponent : this._editEventComponent;
-    form.setDisabled(false);
-  }
-
-  setFavoriteButtonDisabled(isDisabled) {
-    this._editEventComponent.getElement().querySelector(`.event__favorite-checkbox `).disabled = isDisabled;
+  rerenderForm() {
+    this._editEventComponent.rerender();
   }
 
   removeEscListener() {
@@ -150,15 +132,13 @@ class PointController {
 
     this._editEventComponent.setFavoriteButtonClickHandler(() => {
       debounce(() => {
-        const data = this._editEventComponent.getFormData();
-        const formData = parseFormData(data);
-        this._onDataChange(this, this._event, formData, true);
-      }, DEBOUNCE_TIMEOUT)();
-
+        const formData = this._editEventComponent.getFormData();
+        const updatedEvent = Object.assign({}, this._event, {isFavorite: formData.isFavorite});
+        this._onDataChange(this, this._event, parseFormData(updatedEvent), true);
+      }, Timeout.DEBOUNCE)();
     });
 
     this._editEventComponent.setCloseButtonClickHandler(() => {
-      this._editEventComponent.reset();
       this._replaceFormToEvent();
     });
 

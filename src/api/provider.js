@@ -68,7 +68,7 @@ class Provider {
   getDestinations() {
     if (this._isOnLine()) {
       return this._api.getDestinations().then((destinations) => {
-        destinations.forEach((it, index) => this._store.setDestination(index, it.toRAW()));
+        destinations.forEach((destination, index) => this._store.setDestination(index, destination.toRAW()));
         return destinations;
       });
     }

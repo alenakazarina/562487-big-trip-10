@@ -1,23 +1,28 @@
-import MenuComponent from './components/menu';
 import StatisticsComponent from './components/statistics';
 import TripInfoController from './controllers/trip-info';
 import TripController from './controllers/trip';
-import FiltersController from './controllers/filters';
+import TripControlsController from './controllers/trip-controls';
 import PointsModel from './models/points';
 import {render} from './utils/render';
 import {showModalOnError} from './utils/common';
-import {MenuTab} from './const';
+import {SortType, FilterType, MenuTab} from './const';
 import API from './api';
 import APIWithProvider from './api/provider';
 import Store from './api/store';
 
-const AUTHORIZATION = `Basic jVVgasSyGBHpa29yZAo=`;
+const AUTHORIZATION = `Basic jLZgasSyKIDpa29yZAo=`;
 const END_POINT = `https://htmlacademy-es-10.appspot.com/big-trip/`;
+
+const InitialData = {
+  SORT_TYPE: SortType.EVENT,
+  FILTER_TYPE: FilterType.EVERYTHING,
+  MENU_TAB: MenuTab.TABLE
+};
 
 const StoreName = {
   POINTS: `bigtrip-points`,
   DESTINATIONS: `bigtrip-destinations`,
-  OFFERS: `bigtrip-offers`,
+  OFFERS: `bigtrip-offers`
 };
 
 window.addEventListener(`load`, () => {
@@ -28,34 +33,25 @@ const api = new API(END_POINT, AUTHORIZATION);
 const store = new Store(StoreName, window.localStorage);
 const apiWithProvider = new APIWithProvider(api, store);
 
-const pointsModel = new PointsModel();
+const pointsModel = new PointsModel(InitialData.FILTER_TYPE, InitialData.SORT_TYPE);
 
 const tripMainElement = document.querySelector(`.trip-main`);
-const menuComponent = new MenuComponent();
-render(tripMainElement.children[1], menuComponent.getElement());
 
 const tripInfoController = new TripInfoController(tripMainElement.children[0], pointsModel);
 tripInfoController.render();
 
-const filtersController = new FiltersController(tripMainElement.children[1], pointsModel);
-filtersController.render();
+const tripControlsController = new TripControlsController(tripMainElement.children[1], pointsModel, InitialData);
+tripControlsController.render();
 
-const tripController = new TripController(document.querySelector(`.trip-events`), pointsModel, apiWithProvider);
+const tripController = new TripController(document.querySelector(`.trip-events`), pointsModel, apiWithProvider, InitialData.SORT_TYPE);
 tripController.render();
 
 const statisticsComponent = new StatisticsComponent(pointsModel);
 render(document.querySelector(`.trip-events`).parentElement, statisticsComponent.getElement());
 statisticsComponent.hide();
 
-menuComponent.setClickHandler((evt) => {
-  menuComponent.setActiveTab(evt.target);
-  if (evt.target.value === MenuTab.TABLE) {
-    tripController.show();
-    statisticsComponent.hide();
-  } else {
-    tripController.hide();
-    statisticsComponent.show();
-  }
+tripControlsController.setViewsToChange(() => {
+  return [statisticsComponent, tripController];
 });
 
 window.addEventListener(`online`, () => {

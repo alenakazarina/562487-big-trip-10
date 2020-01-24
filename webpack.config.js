@@ -21,9 +21,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: `src/index.html`
     }),
-    new MomentLocalesPlugin({
-      localesToKeep: [`es-us`]
-    })
+    new MomentLocalesPlugin()
   ],
   devtool: `source-map`,
   devServer: {

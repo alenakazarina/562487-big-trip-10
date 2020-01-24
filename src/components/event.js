@@ -1,7 +1,9 @@
 import AbstractComponent from './abstract-component';
 import {sanitizeTemplate} from '../utils/render';
-import {getDuration, getDatetime, capitalizeFirstLetter, getIcon} from '../utils/common';
-import {MAX_OFFERS_COUNT_TO_SHOW} from '../const';
+import {getDuration, getDatetime, capitalizeFirstLetter} from '../utils/common';
+import {availableEvents} from '../const';
+
+const MAX_OFFERS_COUNT_TO_SHOW = 3;
 
 const createOfferTemplate = (offer) => {
   return `
@@ -14,11 +16,13 @@ const createOfferTemplate = (offer) => {
 const createEventTemplate = (event) => {
   const {type, startDate, endDate, price} = event;
   const eventTitle = capitalizeFirstLetter(type);
-  const icon = getIcon(type);
+  const icon = availableEvents.find((availableEvent) => availableEvent.type === type).icon;
   const start = getDatetime(startDate);
   const end = getDatetime(endDate);
-  const duration = getDuration(startDate, endDate);
+  const {days, hours, minutes} = getDuration(startDate, endDate);
   const offers = event.offers.slice(0, MAX_OFFERS_COUNT_TO_SHOW).map((offer) => createOfferTemplate(offer)).join(`\n`);
+
+  const duration = `${days} ${hours} ${minutes}`;
 
   return `
     <li class="trip-events__item">

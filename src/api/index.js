@@ -41,11 +41,11 @@ class API {
       .then(Point.parsePoint);
   }
 
-  updatePoint(id, data) {
+  updatePoint(id, point) {
     return this._load({
       url: `points/${id}`,
       method: Method.PUT,
-      body: JSON.stringify(data.toRAW()),
+      body: JSON.stringify(point.toRAW()),
       headers: new Headers({'Content-Type': `application/json`})
     })
       .then((response) => response.json())
@@ -68,11 +68,11 @@ class API {
       .then(Offer.parseOffers);
   }
 
-  sync(data) {
+  sync(points) {
     return this._load({
       url: `points/sync`,
       method: Method.POST,
-      body: JSON.stringify(data),
+      body: JSON.stringify(points),
       headers: new Headers({'Content-Type': `application/json`})
     })
     .then((response) => response.json());

@@ -28,7 +28,7 @@ const createListItemsTemplate = (events, count, sortType) => {
 };
 
 const createTripDaysListTemplate = (days, sortType) => {
-  const listItemsTemplate = days.map((day, i) => createListItemsTemplate(day, i, sortType)).join(`\n`);
+  const listItemsTemplate = days.length ? days.map((day, i) => createListItemsTemplate(day, i, sortType)).join(`\n`) : ``;
 
   return `
     <ul class="trip-days">

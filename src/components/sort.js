@@ -1,4 +1,4 @@
-import AbstractComponent from './abstract-component';
+import AbstractSmartComponent from './abstract-smart-component';
 import {SortType} from '../const';
 
 const createDirectionIcon = () => {
@@ -22,7 +22,7 @@ const createSortFitlerTemplate = (sortType, isChecked) => {
 
 const createSortTemplate = (activeSortType) => {
   const isDayShowed = activeSortType === SortType.EVENT ? `Day` : ``;
-  const sortFitlersTemplate = Object.values(SortType).map((sortType) => createSortFitlerTemplate(sortType, sortType === SortType.EVENT)).join(`\n`);
+  const sortFitlersTemplate = Object.values(SortType).map((sortType) => createSortFitlerTemplate(sortType, sortType === activeSortType)).join(`\n`);
 
   return `
     <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
@@ -33,23 +33,31 @@ const createSortTemplate = (activeSortType) => {
   `;
 };
 
-class Sort extends AbstractComponent {
-  constructor() {
+class Sort extends AbstractSmartComponent {
+  constructor(activeSortType) {
     super();
-    this._active = SortType.EVENT;
+    this._activeSortType = activeSortType;
+    this._sortClickHandler = null;
   }
 
   getTemplate() {
-    return createSortTemplate(this._active);
+    return createSortTemplate(this._activeSortType);
   }
 
-  setSortTypeChangeHandler(handler) {
+  recoveryListeners() {
+    this.setSortClickHandler(this._sortClickHandler);
+  }
+
+  setSortClickHandler(handler) {
+    this._sortClickHandler = handler;
+
     this.getElement().addEventListener(`click`, (evt) => {
       const {sortType} = evt.target.dataset;
 
-      if (sortType && sortType !== this._active) {
-        this._active = sortType;
-        handler(sortType);
+      if (sortType && sortType !== this._activeSortType) {
+        this._activeSortType = sortType;
+        this._sortClickHandler(sortType);
+        this.rerender();
       }
     });
   }
