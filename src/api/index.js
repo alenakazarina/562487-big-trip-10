@@ -85,7 +85,6 @@ class API {
       .then(checkStatus)
       .catch((err) => {
         showModalOnError(err);
-        throw err;
       });
   }
 }
