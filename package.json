@@ -13,20 +13,21 @@
     "css-loader": "3.3.2",
     "eslint": "6.1.0",
     "eslint-config-htmlacademy": "0.5.2",
-    "html-webpack-plugin": "3.2.0",
+    "html-webpack-plugin": "^4.5.2",
     "moment-locales-webpack-plugin": "1.1.2",
     "style-loader": "1.0.1",
-    "webpack": "4.41.2",
+    "stylelint-config-htmlacademy": "^0.1.4",
+    "webpack": "^5.36.2",
     "webpack-cli": "3.3.10",
-    "webpack-dev-server": "3.9.0"
+    "webpack-dev-server": "^3.11.2"
   },
   "engines": {
-    "node": "10"
+    "node": "14"
   },
   "dependencies": {
     "chart.js": "2.9.3",
     "chartjs-plugin-datalabels": "0.7.0",
-    "dompurify": "2.0.7",
+    "dompurify": "^2.2.8",
     "flatpickr": "4.6.3",
     "moment": "2.24.0"
   }
